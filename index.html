@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>รับคอมมิชชั่น</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Serif+Thai:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink:      #E69380;
+      --ink-soft: #3d3d5c;
+      --dust:     #E9C6C1;
+      --paper:    #FFEDE9;
+      --rose:     #c0567a;
+      --rose-dim: #e8a5bc;
+      --white:    #ffffff;
+      --radius:   12px;
+    }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px 60px;
+      align-items: start;
+    }
+    @media (max-width: 991px) {
+      body { grid-template-columns: 1fr; gap: 32px; padding: 24px 16px 40px; }
+    }
+    .gallery-container {
+      width: 100%; max-width: 300px; margin: 0 auto;
+      position: sticky; top: 40px;
+    }
+    @media (max-width: 991px) { .gallery-container { position: static; } }
+    .gallery-title-area { text-align: center; margin-bottom: 24px; }
+    .gallery-title-area h2 {
+      font-family: 'Noto Serif Thai', serif; font-size: 26px; font-weight: 700; color: var(--ink);
+    }
+    .masonry-grid { columns: 1; column-gap: 0; width: 100%; }
+    .gallery-item {
+      break-inside: avoid; margin-bottom: 16px; background: var(--white);
+      border-radius: var(--radius); overflow: hidden;
+      box-shadow: 0 4px 12px rgba(26,26,46,.03); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .gallery-item:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(26,26,46,.08); }
+    .gallery-item img { width: 100%; height: auto; display: block; object-fit: cover; }
+    .gallery-info {
+      padding: 12px; font-size: 13px; font-weight: 600; color: var(--ink-soft);
+      text-align: center; background: var(--white); border-top: 1px solid var(--paper);
+    }
+    .filter-tags { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+    .tag {
+      font-size: 11px; font-weight: 600; color: var(--ink-soft);
+      border: 1.5px solid var(--dust); background: var(--white);
+      border-radius: 999px; padding: 4px 14px; cursor: pointer; transition: all 0.2s;
+    }
+    .tag:hover { color: var(--rose); border-color: var(--rose-dim); background: #fff5f7; }
+    header { text-align: center; margin-bottom: 36px; width: 100%; }
+    .badge {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      letter-spacing: .12em; text-transform: uppercase; color: var(--rose);
+      border: 1.5px solid var(--rose-dim); border-radius: 999px; padding: 4px 14px; margin-bottom: 16px;
+    }
+    header h1 {
+      font-family: 'Noto Serif Thai', serif;
+      font-size: clamp(26px, 5vw, 36px); font-weight: 700; line-height: 1.25;
+      color: var(--ink); margin-bottom: 10px;
+    }
+    header p { font-size: 15px; color: var(--ink-soft); line-height: 1.7; }
+    .card {
+      width: 100%; background: var(--white); border-radius: var(--radius);
+      padding: 36px 32px;
+      box-shadow: 0 2px 4px rgba(26,26,46,.04), 0 8px 32px rgba(26,26,46,.06);
+    }
+    .field { margin-bottom: 22px; }
+    .field:last-of-type { margin-bottom: 28px; }
+    .field-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: var(--ink-soft);
+      letter-spacing: .03em; margin-bottom: 7px;
+    }
+    .field-label .req { color: var(--rose); font-size: 15px; line-height: 1; }
+    input[type="text"], input[type="email"], input[type="url"],
+    input[type="number"], select, textarea {
+      width: 100%; font-family: 'Noto Serif Thai', sans-serif;
+      font-size: 15px; color: var(--ink); background: var(--paper);
+      border: 1.5px solid var(--dust); border-radius: 8px;
+      padding: 13px 14px 9px; line-height: 1.8; text-decoration: none; overflow: visible;
+    }
+    input[type="text"]::placeholder, input[type="email"]::placeholder,
+    input[type="url"]::placeholder, input[type="number"]::placeholder,
+    textarea::placeholder { color: #C3A4A9; }
+    input[type="text"]:focus, input[type="email"]:focus, input[type="url"]:focus,
+    input[type="number"]:focus, select:focus, textarea:focus {
+      border-color: var(--rose); background: var(--white);
+      box-shadow: 0 0 0 3px rgba(192,86,122,.12);
+      padding-top: 10px; padding-bottom: 12px; line-height: 1.4; height: auto !important;
+    }
+    textarea { resize: vertical; min-height: 90px; }
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: "▾"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--rose); pointer-events: none; font-size: 13px;
+    }
+    select { padding-right: 34px; cursor: pointer; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+    select::-ms-expand { display: none; }
+    .hint { font-size: 12px; color: #C3A4A9; margin-top: 5px; }
+    .addon-section {
+      background: var(--paper); border: 1.5px solid var(--dust);
+      border-radius: 8px; padding: 16px; margin-top: 10px; margin-bottom: 10px;
+    }
+    .addon-title {
+      font-size: 11px; font-weight: 700; color: var(--rose);
+      text-transform: uppercase; letter-spacing: .06em;
+      margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px dashed var(--dust);
+    }
+    .checkbox-group { display: flex; flex-direction: column; gap: 12px; }
+    .cb-row { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none; }
+    .cb-row:hover .cb-visual { border-color: var(--rose-dim); }
+    .cb-native { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+    .cb-visual {
+      width: 18px; height: 18px; min-width: 18px; border: 2px solid var(--dust);
+      border-radius: 4px; background: var(--white); margin-top: 2px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s, border-color .15s; flex-shrink: 0;
+    }
+    .cb-native:checked + .cb-visual { background: var(--rose); border-color: var(--rose); }
+    .cb-native:checked + .cb-visual::after {
+      content: ""; width: 5px; height: 9px; border: 2px solid #fff;
+      border-top: none; border-left: none; transform: rotate(45deg) translate(-1px, -1px); display: block;
+    }
+    .cb-native:focus-visible + .cb-visual { box-shadow: 0 0 0 3px rgba(192,86,122,.25); }
+    .cb-text { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.4; }
+    .cb-desc { font-size: 12px; color: #C3A4A9; font-weight: 400; display: block; margin-top: 2px; }
+    .radio-group { display: flex; flex-direction: column; gap: 10px; }
+    .radio-row { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none; }
+    .radio-row:hover .radio-visual { border-color: var(--rose-dim); }
+    .radio-native { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+    .radio-visual {
+      width: 18px; height: 18px; min-width: 18px; border: 2px solid var(--dust);
+      border-radius: 50%; background: var(--white); margin-top: 2px;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color .15s; flex-shrink: 0;
+    }
+    .radio-native:checked + .radio-visual { border-color: var(--rose); }
+    .radio-native:checked + .radio-visual::after {
+      content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--rose); display: block;
+    }
+    .radio-native:focus-visible + .radio-visual { box-shadow: 0 0 0 3px rgba(192,86,122,.25); }
+    .radio-text { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.4; }
+    .radio-desc { font-size: 12px; color: #C3A4A9; font-weight: 400; display: block; margin-top: 2px; }
+    .price-box {
+      background: #fdf5f7; border: 2px dashed var(--rose-dim);
+      border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;
+    }
+    .price-box .price-label { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 4px; }
+    .price-box .price-num { font-size: 26px; font-weight: 700; color: var(--rose); }
+    .price-commercial-note {
+      text-align: center; font-size: 12px; color: #dc3545;
+      margin-top: 0; font-weight: 500; display: block;
+    }
+
+    /* ── แจ้งเตือนราคาต่ำกว่าเรท ── */
+    #offer-warning {
+      display: none;
+      background: #fff3cd; border: 1.5px solid #ffc107;
+      border-radius: 8px; padding: 12px 14px;
+      font-size: 13px; color: #856404; font-weight: 600;
+      margin-top: 8px; line-height: 1.5;
+    }
+    #offer-warning.show { display: block; }
+
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(26,26,46,.5); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; opacity: 0; pointer-events: none;
+      transition: opacity .3s; padding: 16px;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-content {
+      background: var(--white); width: 100%; max-width: 460px;
+      border-radius: var(--radius); padding: 28px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.15);
+      transform: scale(.9); transition: transform .3s;
+    }
+    .modal-overlay.active .modal-content { transform: scale(1); }
+    .modal-header {
+      font-family: 'Noto Serif Thai', serif; font-size: 20px; font-weight: 700;
+      color: var(--rose); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .modal-body { font-size: 14px; color: var(--ink-soft); line-height: 1.6; margin-bottom: 24px; }
+    .modal-body ul { padding-left: 20px; margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .modal-close-btn {
+      width: 100%; padding: 12px; background: var(--rose); color: var(--white);
+      border: none; border-radius: 8px; font-family: 'Sarabun', sans-serif;
+      font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s;
+    }
+    .modal-close-btn:hover { background: var(--ink); }
+    .divider {
+      display: flex; align-items: center; gap: 12px; margin: 4px 0 24px;
+      color: #FF9279; font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+    }
+    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--dust); }
+    .btn {
+      width: 100%; padding: 14px; background: var(--ink); color: var(--white);
+      font-family: 'Sarabun', sans-serif; font-size: 15px; font-weight: 600;
+      border: none; border-radius: 8px; cursor: pointer; letter-spacing: .03em;
+      transition: background .2s, transform .1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn:hover  { background: var(--rose); }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+    #toast {
+      display: none; align-items: flex-start; gap: 12px;
+      background: #eaf6ec; border: 1.5px solid #82c98c; border-radius: var(--radius);
+      padding: 16px 18px; margin-bottom: 24px; font-size: 14px; color: #2a6033;
+    }
+    #toast.show { display: flex; }
+    #error-toast {
+      display: none; background: #fdeaea; border: 1.5px solid #e88282; border-radius: var(--radius);
+      padding: 14px 18px; margin-bottom: 24px; font-size: 14px; color: #8b2222;
+    }
+    #error-toast.show { display: block; }
+    .spinner {
+      width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,.4);
+      border-top-color: var(--white); border-radius: 50%;
+      animation: spin .6s linear infinite; display: none;
+    }
+    .btn.loading .spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 480px) { .card { padding: 28px 20px; } }
+    .field input[type="date"] {
+      width: 100%; padding: 10px 14px; background-color: #FFEDE9;
+      border: 1px solid #E9C6C1; border-radius: 8px; font-size: 15px;
+      color: #E9AA9C; font-family: inherit; box-sizing: border-box;
+    }
+    .field input[type="date"]:focus { outline: none; border-color: #c4b5fd; }
+    .field-hint { font-size: 0.75rem; color: #F7C4B6; font-weight: normal; }
+    #submitBtn { margin-top: 24px; }
+  </style>
+</head>
+<body>
+
+<div class="gallery-container">
+  <div style="text-align: center; margin-bottom: 24px;">
+    <img src="https://pbs.twimg.com/profile_images/1770426683377799168/baUjsht2_400x400.png" alt="profile"
+      style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--rose-dim);">
+    <h2 style="font-family: 'Noto Serif Thai', serif; font-size: 20px; margin-top: 12px; color: var(--ink);">Kanapy</h2>
+    <p style="font-size: 13px; color: var(--ink-soft); margin-top: 4px; line-height: 1.6;">
+      Freelance Illustrator<br>Thank you for your support
+    </p>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 10px;">
+    <a href="https://x.com/kanigiwa" target="_blank"
+      style="display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+             background: var(--paper); border: 1.5px solid var(--dust); border-radius: 8px;
+             text-decoration: none; color: var(--ink); font-size: 14px; font-weight: 600; transition: border-color .2s;">
+      <img src="https://img2.pic.in.th/cute.md.png" alt="X" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;"> Twitter / X
+    </a>
+    <a href="https://www.facebook.com/kanapyforwork/" target="_blank"
+      style="display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+             background: var(--paper); border: 1.5px solid var(--dust); border-radius: 8px;
+             text-decoration: none; color: var(--ink); font-size: 14px; font-weight: 600; transition: border-color .2s;">
+      <img src="https://img2.pic.in.th/cat9301463a0826bb6e.md.png" alt="Facebook" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;"> Facebook
+    </a>
+    <a href="https://dragmetowork.wixsite.com/commissionsthai/bust-up" target="_blank"
+      style="display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+             background: var(--paper); border: 1.5px solid var(--dust); border-radius: 8px;
+             text-decoration: none; color: var(--ink); font-size: 14px; font-weight: 600; transition: border-color .2s;">
+      <img src="https://img1.pic.in.th/images/cat-1.md.png" alt="Portfolio" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;"> ตัวอย่างงาน
+    </a>
+    <button onclick="navigator.clipboard.writeText('kanapyworks@gmail.com').then(()=>{const l=this.querySelector('.email-label');l.textContent='คัดลอกแล้ว!';setTimeout(()=>l.textContent='อีเมล',2000)})"
+      style="display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+             background: var(--paper); border: 1.5px solid var(--dust); border-radius: 8px;
+             text-decoration: none; color: var(--ink); font-size: 14px; font-weight: 600;
+             transition: border-color .2s; cursor: pointer;">
+      <img src="https://img2.pic.in.th/cat-2.md.png" alt="Email" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;">
+      <span class="email-label">E-mail</span>
+    </button>
+    <div style="margin-top: 18px;">
+      <a class="btn"
+         href="https://script.google.com/macros/s/AKfycbxBvbXELIDEVe_VkmedB7TN-YQDpiGKiOlGR4dFSPT6TOVMgjJ6O3FeD0dWV7kxX2tPOA/exec?page=status"
+         target="_blank">
+        <span class="btn-text">✦ ตรวจสอบสถานะคิวงาน ✦</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+
+<div style="width: 100%;">
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="customOfferModal">
+    <div class="modal-content">
+      <div class="modal-body">
+        <p style="color: #dc3545; font-weight: 700; font-size: 14.5px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+          ⚠️  โปรดอ่านข้อตกลงและเงื่อนไขให้ละเอียดก่อนกดตกลง  ⚠️
+        </p>
+        <p style="text-align: center;">ระบบเสนอราคาเปิดรับบรีฟโดยไม่จำกัดจำนวนคิว เพื่อให้ลูกค้าเสนอราคาที่พึงพอใจตามสเกลงาน โดยมีเงื่อนไขดังนี้ค่ะ</p>
+        <div style="background: #fff5f5; border: 1px solid #fbc4c4; border-radius: 8px; padding: 12px 14px; margin: 14px 0; font-size: 13px; color: #dc3545; line-height: 1.5; font-weight: 600;">
+          คำเตือน: โปรดพิจารณาในราคาที่จ่ายไหว ไม่มีการผ่อนชำระ ต้องโอนเต็มจำนวนหลังภาพร่างผ่านเท่านั้น นักวาดอาจจะไม่ได้รับทุกงาน โปรดเข้าใจหากถูกปฏิเสธ
+        </div>
+        <ul>
+          <li><strong>การคัดเลือก:</strong> พิจารณาจากความน่าสนใจของบรีฟและงบประมาณที่สมเหตุสมผลคู่กัน</li>
+          <li><strong>ราคาที่แนะนำ:</strong> เพื่อเพิ่มโอกาสรับเลือก แนะนำให้เสนอมากกว่าเรทมาตรฐานของนักวาดค่ะ</li>
+          <li><strong>การติดต่อกลับ:</strong> หากผ่านเกณฑ์ ทางนักวาดจะติดต่อกลับภายใน 7-10 วัน เพื่อทำการลงคิวค่ะ<br>
+            <span style="color: #c0567a;">(หากไม่ผ่านการคัดเลือก จะมีข้อความติดต่อไปแจ้งผลให้ทราบเช่นกัน ซึ่งคุณลูกค้าสามารถส่งคำขอเข้ามาในราคาใหม่เพื่อขอรับการพิจารณาอีกครั้งค่ะ)</span></li>
+        </ul>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal()">✦ ฉันเข้าใจและยอมรับเงื่อนไข ✦</button>
+    </div>
+  </div>
+
+  <header>
+    <div class="badge">รอบปกติ รับ 2 คิว</div>
+    <h1>✦ Commission ✦</h1>
+    <p>กรอกข้อมูลให้ครบถ้วนเพื่อให้ติดต่อกลับได้ถูกต้องนะคะ<br>จะตอบกลับภายใน 3-7 วันทำการค่ะ</p>
+  </header>
+
+  <div class="card">
+    <div id="toast">
+      <span>✅</span>
+      <div>
+        <strong>ส่งข้อมูลเรียบร้อยแล้วค่ะ!</strong><br>
+        <span>จะติดต่อกลับผ่านช่องทางที่ระบุไว้เร็ว ๆ นี้ ขอบคุณที่สนใจนะคะ 🌸</span>
+      </div>
+    </div>
+    <div id="error-toast"></div>
+
+    <div id="form-wrap">
+
+      <div class="field">
+        <div class="field-label">ชื่อ–นามสกุล (หรือชื่อที่ใช้เรียก) <span class="req">*</span></div>
+        <input type="text" id="name" placeholder="เช่น ซากุระ หรือ Sakura"
+          autocomplete="off" autocorrect="off" spellcheck="false"
+          required pattern=".*\S.*" title="กรุณากรอกชื่อ-นามสกุล และห้ามใส่เพียงช่องว่าง" />
+      </div>
+
+      <div class="field">
+        <div class="field-label">ช่องทางติดต่อ <span class="req">*</span></div>
+        <input type="text" id="contact" placeholder="เช่น X: @username / Facebook: username"
+          autocomplete="off" autocorrect="off" spellcheck="false"
+          required pattern=".*\S.*" title="กรุณากรอกรายละเอียด และห้ามใส่เพียงช่องว่าง" />
+      </div>
+
+      <div class="field">
+        <div class="field-label">อีเมล <span class="req">*</span>
+          <span class="field-hint">พิมพ์เฉพาะชื่ออีเมล เช่น yourname</span>
+        </div>
+        <input type="text" id="email" placeholder="แนะนำ G-mail"
+          autocomplete="off" autocorrect="off" spellcheck="false" required onblur="autoFillGmail(this)" />
+      </div>
+
+      <div class="divider">รายละเอียดงาน & คำนวณราคา</div>
+
+      <!-- เลือกรูปแบบการสั่งงาน -->
+      <div class="field">
+        <div class="field-label">รูปแบบการสั่งงาน <span class="req">*</span></div>
+        <div class="select-wrap">
+          <select id="orderType" onchange="updateCalculator()" required>
+            <option value="" disabled selected>-- กรุณาเลือกรูปแบบการสั่งงาน --</option>
+            <option value="normal">คิวปกติ (จำกัดคิว/ราคาตามเรท)</option>
+            <option value="custom_offer">เสนอราคาเอง (ไม่จำกัดคิว/ระบุงบเอง)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ── calculator-zone: แสดงทั้ง normal และ custom_offer ── -->
+      <div id="calculator-zone" style="display:none;">
+
+        <div class="field">
+          <div class="field-label">ประเภทงานที่ต้องการ <span class="req">*</span></div>
+          <div class="select-wrap">
+            <select id="jobType" onchange="updateCalculator()">
+              <option value="" disabled selected>-- เลือกประเภทงาน --</option>
+              <option value="bust_bw">Black & White (อกขึ้นไป)</option>
+              <option value="bust_color">Full Color (อกขึ้นไป)</option>
+              <option value="waist_bw">Black & White (สะโพกขึ้นไป - เต็มตัว)</option>
+              <option value="waist_color">Full Color (สะโพกขึ้นไป - เต็มตัว)</option>
+              <option value="couple_color">Novel Cover 2 ตัวละคร (สะโพกขึ้นไป - เต็มตัว)</option>
+              <option value="sd_chibi">Chibi (Chibi)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" id="char-count-field" style="display:none;">
+          <div class="field-label">จำนวนตัวละคร</div>
+          <div class="select-wrap">
+            <select id="charCount" onchange="updateCalculator()">
+              <option value="" disabled selected>-- กรุณาเลือกจำนวนตัวละคร --</option>
+              <option value="1" selected>1 ตัวละคร</option>
+              <option value="2">2 ตัวละคร</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="addons-field" style="display:none;">
+          <div class="field-label" style="margin-bottom:6px;">ตัวเลือกเพิ่มเติม (Add-ons) — ติ๊กได้มากกว่า 1 ข้อ</div>
+
+          <div class="addon-section" id="section-scale" style="display:none;">
+            <div class="addon-title">✦ สเกลตัวละคร (Scale)</div>
+            <div class="checkbox-group">
+              <label class="cb-row">
+                <input class="cb-native" type="checkbox" id="add_fullbody" onchange="updateCalculator()">
+                <span class="cb-visual"></span>
+                <div class="cb-text">
+                  ต้องการงานขนาดเต็มตัว (Full Body)
+                  <span class="cb-desc" id="fullbody-price-desc">+0 บาท</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="addon-section" id="section-details">
+            <div class="addon-title">✦ ความอลังการ & รายละเอียด (Details)</div>
+            <div class="checkbox-group">
+              <label class="cb-row">
+                <input class="cb-native" type="checkbox" id="add_fantasy" onchange="updateCalculator()">
+                <span class="cb-visual"></span>
+                <div class="cb-text">
+                  ตัวละครดีเทลเยอะ / แฟนตาซี / จีนโบราณ
+                  <span class="cb-desc" id="fantasy-price-desc">+0 บาท</span>
+                </div>
+              </label>
+              <label class="cb-row">
+                <input class="cb-native" type="checkbox" id="add_bg" onchange="updateCalculator()">
+                <span class="cb-visual"></span>
+                <div class="cb-text">
+                  เพิ่มฉากหลังที่มีรายละเอียดเยอะ
+                  <span class="cb-desc" id="bg-price-desc">+0 บาท</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="addon-section" id="section-extra" style="display:none;">
+            <div class="addon-title">✦ ออปชันพิเศษภาพคู่ (Extra)</div>
+            <div class="checkbox-group">
+              <label class="cb-row">
+                <input class="cb-native" type="checkbox" id="add_extra_char" onchange="updateCalculator()">
+                <span class="cb-visual"></span>
+                <div class="cb-text">เพิ่มตัวละครอีก 1 ตัว (+5,000 บาท)</div>
+              </label>
+              <label class="cb-row">
+                <input class="cb-native" type="checkbox" id="add_horizontal" onchange="updateCalculator()">
+                <span class="cb-visual"></span>
+                <div class="cb-text">ต้องการภาพยาวแนวนอน (+5,000 บาท)</div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- price box: แสดงราคาที่คำนวณได้ -->
+        <div class="price-box" id="calc-price-box" style="display:none;">
+          <p class="price-label">ราคาประเมินเบื้องต้นสุทธิ</p>
+          <p class="price-num"><span id="total-price">0</span> บาท</p><br>
+          <p class="price-commercial-note">เป็นราคารวมเชิงพาณิชย์แล้ว</p>
+        </div>
+
+        <!-- ช่องเสนอราคา (แสดงเฉพาะ custom_offer) -->
+        <div id="price-field" class="field" style="display:none;">
+          <div class="field-label">ราคาที่คุณต้องการเสนอ (บาท) <span class="req">*</span></div>
+          <input type="number" id="offeredPrice" placeholder="ระบุงบประมาณ เช่น 3500" min="1"
+            oninput="checkOfferPrice()" />
+          <!-- แจ้งเตือนราคาต่ำกว่าเรท -->
+          <div id="offer-warning">
+            ⚠️ ราคาที่คุณเสนอ (<span id="warn-offer">0</span> บาท) ต่ำกว่าราคาประเมินตามเรทมาตรฐาน
+            (<span id="warn-base">0</span> บาท) — เพื่อเพิ่มโอกาสได้รับคัดเลือก แนะนำให้เสนอราคาเท่ากับหรือสูงกว่านี้ค่ะ
+          </div>
+        </div>
+
+      </div>
+      <!-- /calculator-zone -->
+
+      <div class="field">
+        <div class="field-label">สิทธิ์การนำผลงานไปโพสต์ <span class="req">*</span></div>
+        <div class="addon-section">
+          <div class="radio-group">
+            <label class="radio-row">
+              <input class="radio-native" type="radio" name="publishRule" id="perm_public" value="โพสต์ได้ตามปกติ" checked>
+              <span class="radio-visual"></span>
+              <div class="radio-text">
+                โพสต์ได้ตามปกติ
+                <span class="radio-desc">ยินดีให้นำผลงานลงสื่อโซเชียลและพอร์ตได้</span>
+              </div>
+            </label>
+            <label class="radio-row">
+              <input class="radio-native" type="radio" name="publishRule" id="perm_private" value="ขอเก็บเป็นความลับ">
+              <span class="radio-visual"></span>
+              <div class="radio-text">
+                ขอเก็บเป็นความลับ
+                <span class="radio-desc">งาน giveaway / งานพิเศษ — ไม่ต้องการให้โชว์ในทุกช่องทาง</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">ลิ้งค์บรีฟงานเท่านั้น <span class="req">*</span></div>
+        <input type="url" id="briefLink" placeholder="https://docs.google.com/... หรือคลังบรีฟ"
+          required pattern="https?://.+" maxlength="500"
+          title="กรุณาใส่ลิงก์เว็บที่ถูกต้อง เช่น https://docs.google.com/..." />
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          กำหนดส่งงานเบื้องต้น <span class="req">*</span>
+          <span class="field-hint">โปรดระบุเวลาคร่าวๆที่ต้องการ...</span>
+        </div>
+        <input type="date" id="dueDate" />
+      </div>
+
+      <div class="field">
+        <div class="field-label">รายละเอียดเพิ่มเติม (ถ้ามี)</div>
+        <textarea id="details" placeholder="รายละเอียดอื่นๆ ถึงนักวาด..." maxlength="500"></textarea>
+        <div class="field-hint">จำกัด 500 ตัวอักษร</div>
+      </div>
+
+      <button class="btn" id="submitBtn">
+        <div class="spinner"></div>
+        <span class="btn-text">ส่งคำขอ ✦</span>
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxBvbXELIDEVe_VkmedB7TN-YQDpiGKiOlGR4dFSPT6TOVMgjJ6O3FeD0dWV7kxX2tPOA/exec";
+
+// เก็บราคาปัจจุบันที่คำนวณได้ (ใช้เปรียบเทียบกับราคาที่เสนอ)
+let currentCalcPrice = 0;
+
+function updateCalculator() {
+  const orderType = document.getElementById("orderType").value;
+  const calcZone = document.getElementById("calculator-zone");
+  const priceField = document.getElementById("price-field");
+
+  if (!orderType) return;
+
+  // แสดง calculator-zone เสมอ (ทั้ง normal และ custom_offer)
+  calcZone.style.display = "block";
+
+  // แสดงช่องเสนอราคาเฉพาะ custom_offer
+  if (orderType === "custom_offer") {
+    priceField.style.display = "block";
+    document.getElementById("offeredPrice").required = true;
+    // เปิด modal เฉพาะครั้งแรกที่เลือก custom_offer
+    if (!document.getElementById("customOfferModal").dataset.shown) {
+      document.getElementById("customOfferModal").classList.add("active");
+      document.getElementById("customOfferModal").dataset.shown = "1";
+    }
+  } else {
+    priceField.style.display = "none";
+    document.getElementById("offeredPrice").required = false;
+    document.getElementById("offer-warning").classList.remove("show");
+  }
+
+  const jobType = document.getElementById("jobType").value;
+  if (!jobType) return;
+
+  const charCount = parseInt(document.getElementById("charCount").value) || 1;
+
+  document.getElementById("char-count-field").style.display =
+    (jobType === "bust_bw" || jobType === "bust_color" || jobType === "waist_bw") ? "block" : "none";
+  document.getElementById("addons-field").style.display = "block";
+  document.getElementById("section-scale").style.display =
+    (jobType === "waist_bw" || jobType === "waist_color") ? "block" : "none";
+  document.getElementById("section-extra").style.display =
+    (jobType === "couple_color") ? "block" : "none";
+
+  updateAddonDescriptions(jobType, charCount);
+
+  let basePrice = 0;
+  if (jobType === "bust_bw")       basePrice = charCount === 1 ? 1500 : 3000;
+  else if (jobType === "bust_color")  basePrice = charCount === 1 ? 3500 : 6000;
+  else if (jobType === "waist_bw")    basePrice = charCount === 1 ? 3000 : 6000;
+  else if (jobType === "waist_color") basePrice = 8000;
+  else if (jobType === "couple_color") basePrice = 20000;
+  else if (jobType === "sd_chibi")    basePrice = 1000;
+
+  let addonPrice = 0;
+  if (document.getElementById("add_fantasy").checked) {
+    if (jobType === "bust_bw") addonPrice += 500;
+    else if (jobType === "bust_color") addonPrice += (charCount === 1 ? 1500 : 2000);
+    else if (jobType === "waist_bw" || jobType === "waist_color") addonPrice += 2000;
+    else if (jobType === "couple_color") addonPrice += 5000;
+    else if (jobType === "sd_chibi") addonPrice += 750;
+  }
+  if (document.getElementById("add_fullbody").checked) {
+    if (jobType === "waist_bw") addonPrice += (1000 * charCount);
+    else if (jobType === "waist_color") addonPrice += 2000;
+  }
+  if (document.getElementById("add_bg").checked) {
+    if (jobType === "bust_color" || jobType === "bust_bw") addonPrice += 500;
+    else if (jobType === "waist_bw") addonPrice += 1000;
+    else if (jobType === "waist_color" || jobType === "couple_color" || jobType === "sd_chibi") addonPrice += 2500;
+  }
+  if (document.getElementById("add_extra_char").checked && jobType === "couple_color") addonPrice += 5000;
+  if (document.getElementById("add_horizontal").checked && jobType === "couple_color") addonPrice += 5000;
+
+  currentCalcPrice = basePrice + addonPrice;
+  document.getElementById("calc-price-box").style.display = "block";
+  document.getElementById("total-price").textContent = currentCalcPrice.toLocaleString();
+
+  // อัปเดตคำเตือนถ้ากำลังอยู่ใน custom_offer
+  if (orderType === "custom_offer") checkOfferPrice();
+}
+
+// ตรวจสอบราคาที่เสนอ vs ราคาที่คำนวณ
+function checkOfferPrice() {
+  const offerVal = parseInt(document.getElementById("offeredPrice").value) || 0;
+  const warning = document.getElementById("offer-warning");
+
+  if (currentCalcPrice > 0 && offerVal > 0 && offerVal < currentCalcPrice) {
+    document.getElementById("warn-offer").textContent = offerVal.toLocaleString();
+    document.getElementById("warn-base").textContent = currentCalcPrice.toLocaleString();
+    warning.classList.add("show");
+  } else {
+    warning.classList.remove("show");
+  }
+}
+
+function closeModal() {
+  document.getElementById("customOfferModal").classList.remove("active");
+}
+
+function updateAddonDescriptions(jobType, charCount) {
+  const fbDesc = document.getElementById("fullbody-price-desc");
+  const ftDesc = document.getElementById("fantasy-price-desc");
+  const bgDesc = document.getElementById("bg-price-desc");
+
+  if (jobType === "bust_bw") {
+    ftDesc.textContent = "+500 บาท"; bgDesc.textContent = "+500 บาท";
+  } else if (jobType === "bust_color") {
+    ftDesc.textContent = charCount === 1 ? "+1,500 บาท" : "+2,000 บาท";
+    bgDesc.textContent = "+500 บาท";
+  } else if (jobType === "waist_bw") {
+    fbDesc.textContent = `+${(1000 * charCount).toLocaleString()} บาท`;
+    ftDesc.textContent = "+2,000 บาท"; bgDesc.textContent = "+1,000 บาท";
+  } else if (jobType === "waist_color") {
+    fbDesc.textContent = "+2,000 บาท"; ftDesc.textContent = "+2,000 บาท"; bgDesc.textContent = "+2,500 บาท";
+  } else if (jobType === "couple_color") {
+    ftDesc.textContent = "+5,000 บาท"; bgDesc.textContent = "+2,500 บาท";
+  } else if (jobType === "sd_chibi") {
+    ftDesc.textContent = "+750 บาท"; bgDesc.textContent = "+2,500 บาท";
+  }
+}
+
+function submitForm() {
+  const idsToCheck = [
+    "error-toast", "orderType", "offeredPrice", "jobType",
+    "add_fullbody", "add_fantasy", "add_bg", "add_extra_char", "add_horizontal",
+    "name", "contact", "email", "briefLink", "details", "dueDate",
+    "total-price", "submitBtn"
+  ];
+  const missing = idsToCheck.filter(id => document.getElementById(id) === null);
+  if (missing.length > 0) {
+    alert("พบปัญหา: ไม่พบช่อง id = " + missing.join(", "));
+    return;
+  }
+
+  document.getElementById("error-toast").classList.remove("show");
+
+  const orderType = document.getElementById("orderType").value;
+  if (!orderType) return showError("กรุณาเลือกรูปแบบการสั่งงานด้วยนะคะ");
+
+  let jobTypeText = "";
+  let finalPriceToSend = "";
+
+  const selectEl = document.getElementById("jobType");
+  if (!selectEl.value) return showError("กรุณาเลือกประเภทงานด้วยนะคะ");
+
+  const charCountEl = document.getElementById("charCount");
+  const charCountVisible = document.getElementById("char-count-field").style.display !== "none";
+  if (charCountVisible && !charCountEl.value) return showError("กรุณาเลือกจำนวนตัวละครด้วยนะคะ");
+
+  const charCountText = (charCountVisible && charCountEl.value) ? ` (${charCountEl.value} ตัวละคร)` : "";
+
+  let selectedAddons = [];
+  if (document.getElementById("add_fullbody").checked && (selectEl.value === "waist_bw" || selectEl.value === "waist_color")) selectedAddons.push("เต็มตัว");
+  if (document.getElementById("add_fantasy").checked) selectedAddons.push("แฟนตาซี/ดีเทลเยอะ");
+  if (document.getElementById("add_bg").checked) selectedAddons.push("เพิ่มฉากละเอียด");
+  if (document.getElementById("add_extra_char").checked && selectEl.value === "couple_color") selectedAddons.push("เพิ่มตัวละคร");
+  if (document.getElementById("add_horizontal").checked && selectEl.value === "couple_color") selectedAddons.push("ภาพแนวนอน");
+
+  const addonString = selectedAddons.length > 0 ? ` [ออปชันเสริม: ${selectedAddons.join(", ")}]` : "";
+  jobTypeText = selectEl.options[selectEl.selectedIndex].text + charCountText + addonString;
+
+  if (orderType === "custom_offer") {
+    const offerVal = parseInt(document.getElementById("offeredPrice").value) || 0;
+    if (!offerVal || offerVal < 1) return showError("กรุณาระบุราคาที่ต้องการเสนอด้วยนะคะ");
+    finalPriceToSend = offerVal.toLocaleString() + " บาท (เสนอราคาเอง)";
+  } else {
+    finalPriceToSend = document.getElementById("total-price").textContent + " บาท";
+  }
+
+  const charCountVal = charCountVisible ? charCountEl.value : "-";
+
+  const name = document.getElementById("name").value.trim();
+  const contact = document.getElementById("contact").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const briefLink = document.getElementById("briefLink").value.trim();
+  const details = document.getElementById("details").value.trim();
+  const dueDate = document.getElementById("dueDate").value;
+
+  const publishRuleEl = document.querySelector('input[name="publishRule"]:checked');
+  const publishRule = publishRuleEl ? publishRuleEl.value : "โพสต์ได้ตามปกติ";
+
+  if (!name || !contact || !email || !briefLink || !dueDate) {
+    return showError("กรุณากรอกข้อมูลช่องที่มีเครื่องหมาย * ให้ครบนะคะ");
+  }
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.classList.add("loading");
+  btn.querySelector(".btn-text").textContent = "กำลังลงทะเบียนคิว...";
+
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      orderType, offeredPrice: finalPriceToSend, name, contact, email,
+      jobType: jobTypeText, charCount: charCountVal,
+      briefLink, details, publishRule, dueDate
+    })
+  })
+    .then(r => r.json())
+    .then(res => {
+      btn.disabled = false;
+      btn.classList.remove("loading");
+      btn.querySelector(".btn-text").textContent = "ส่งคำขอ ✦";
+      if (res.success) {
+        document.getElementById("form-wrap").querySelectorAll("input, select, textarea").forEach(el => el.value = "");
+        document.querySelectorAll("input[type=checkbox]").forEach(el => el.checked = false);
+        currentCalcPrice = 0;
+        document.getElementById("calculator-zone").style.display = "none";
+        document.getElementById("offer-warning").classList.remove("show");
+        delete document.getElementById("customOfferModal").dataset.shown;
+        const toast = document.getElementById("toast");
+        toast.classList.add("show");
+        toast.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        showError(res.message);
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.classList.remove("loading");
+      btn.querySelector(".btn-text").textContent = "ส่งคำขอ ✦";
+      showError("ระบบขัดข้องชั่วคราว: " + err.message);
+    });
+}
+
+function autoFillGmail(input) {
+  const value = input.value.trim();
+  if (value === "") return;
+  if (!value.includes("@")) input.value = value + "@gmail.com";
+}
+
+function showError(msg) {
+  const errBox = document.getElementById("error-toast");
+  errBox.textContent = "⚠️ " + msg;
+  errBox.classList.add("show");
+  errBox.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+document.getElementById("submitBtn").addEventListener("click", submitForm);
+</script>
+
+</body>
+</html>

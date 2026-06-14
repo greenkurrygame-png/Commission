@@ -34,10 +34,11 @@
       body { grid-template-columns: 1fr; gap: 32px; padding: 24px 16px 40px; }
     }
     .gallery-container {
-      width: 100%; max-width: 300px; margin: 0 auto;
+      width: 100%; max-width: 300px; margin-left: auto; 
+  margin-right: 0;
       position: sticky; top: 40px;
     }
-    @media (max-width: 991px) { .gallery-container { position: static; } }
+    @media (max-width: 991px) { .gallery-container { position: static; margin: 0 auto; } }
     .gallery-title-area { text-align: center; margin-bottom: 24px; }
     .gallery-title-area h2 {
       font-family: 'Noto Serif Thai', serif; font-size: 26px; font-weight: 700; color: var(--ink);

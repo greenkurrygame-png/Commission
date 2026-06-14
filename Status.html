@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ตรวจสอบสถานะคอมมิชชั่น</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Serif+Thai:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink:      #E69380;
+      --ink-soft: #3d3d5c;
+      --dust:     #E9C6C1;
+      --paper:    #FFEDE9;
+      --rose:     #c0567a;
+      --rose-dim: #e8a5bc;
+      --white:    #ffffff;
+      --radius:   12px;
+    }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      padding: 40px 16px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .layout {
+      display: flex;
+      gap: 24px;
+      width: 100%;
+      max-width: 900px;
+      align-items: flex-start;
+    }
+    @media (max-width: 640px) {
+      .layout { flex-direction: column; }
+      .timeline-col { width: 100% !important; position: static !important; }
+    }
+    .form-col { flex: 1; min-width: 0; }
+    .timeline-col {
+      width: 230px; flex-shrink: 0;
+      display: flex; flex-direction: column; gap: 16px;
+      position: sticky; top: 40px;
+    }
+    .card {
+      width: 100%; background: var(--white);
+      border-radius: var(--radius); padding: 36px 32px;
+      box-shadow: 0 8px 32px rgba(26,26,46,.06);
+    }
+    .side-card {
+      background: var(--white); border-radius: var(--radius);
+      padding: 20px; box-shadow: 0 8px 32px rgba(26,26,46,.06);
+    }
+    header { text-align: center; margin-bottom: 28px; }
+    .queue-banner {
+      background: #FFFDF0; border: 1.5px solid #FFEFD7; border-radius: 10px;
+      padding: 14px 16px; margin-bottom: 20px; font-size: 13px; color: var(--ink-soft);
+      transition: background .3s, border-color .3s;
+    }
+    .queue-banner.full { background: #fff0f0; border-color: #e88282; }
+    .queue-banner-title { font-weight: 700; font-size: 14px; color: var(--ink); margin-bottom: 8px; }
+    .queue-banner-loading { color: #aaa; }
+    .queue-banner-content { display: none; line-height: 2; }
+    .queue-banner-content span.val { font-weight: 700; color: var(--ink); }
+    .slots-full { color: #c0392b; font-weight: 700; }
+    .slots-ok   { color: #2e7d32; font-weight: 700; }
+    .field { margin-bottom: 20px; }
+    .field-label { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 7px; }
+    #searchKey {
+      width: 100%; padding: 12px 15px;
+      background-color: #fff6f2; border: 2px solid #ffdcd0 !important;
+      border-radius: 8px; font-size: 15px; color: #555;
+      box-sizing: border-box; transition: all 0.2s ease;
+      font-family: 'Sarabun', sans-serif;
+    }
+    #searchKey:focus {
+      outline: none; border-color: #ff9e7d !important;
+      background-color: #ffffff; box-shadow: 0 0 5px rgba(255,158,125,0.4);
+    }
+    .btn {
+      width: 100%; padding: 13px; background: var(--ink); color: var(--white);
+      border: none; border-radius: 8px; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: background .2s; margin-top: 20px;
+      font-family: 'Sarabun', sans-serif;
+    }
+    .btn:hover { background: var(--rose); }
+    #result-zone { margin-top: 24px; display: none; }
+    .order-item {
+      background: #fdf5f7; border: 1.5px solid var(--rose-dim);
+      border-radius: 8px; padding: 16px; margin-bottom: 12px;
+    }
+    .order-title { font-weight: 700; font-size: 15px; color: var(--ink); margin-bottom: 4px; }
+    .order-date  { font-size: 12px; color: #b0aac4; margin-bottom: 2px; }
+    .status-badge {
+      display: inline-block; padding: 4px 12px; background: #888;
+      color: white; border-radius: 999px; font-size: 13px; font-weight: 600;
+    }
+    .status-badge[data-status="รอยืนยัน"]     { background: #C52D49 !important; }
+    .status-badge[data-status="ตกลงรับงาน"]   { background: #66BCD1 !important; }
+    .status-badge[data-status="ส่งภาพร่าง"]   { background: #D0BD63 !important; }
+    .status-badge[data-status="ชำระเงินแล้ว"] { background: #B2DF6A !important; }
+    .status-badge[data-status="ส่งงานแล้ว"]   { background: #DF9682 !important; }
+    .queue-info {
+      margin-top: 8px; font-size: 13px; color: #555;
+      background: #f0f0f0; padding: 6px 10px; border-radius: 6px;
+    }
+    .error-box {
+      background: #fdeaea; border: 1.5px solid #e88282; color: #8b2222;
+      padding: 12px; border-radius: 8px; font-size: 14px; text-align: center;
+    }
+    .wait-box {
+      margin-top: 10px; padding: 10px 12px;
+      background: #fff8f0; border: 1.5px solid #ffdcb8;
+      border-radius: 8px; display: none;
+    }
+    .wait-box-title { font-size: 13px; color: #7a4a2a; font-weight: 700; margin-bottom: 4px; }
+    .wait-box-body  { font-size: 13px; color: #7a4a2a; line-height: 2; }
+    .radio-desc { font-size: 12px; color: #C3A4A9; font-weight: 400; display: block; margin-top: 2px; }
+    .timeline-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 16px; }
+    .step-row  { display: flex; gap: 12px; align-items: flex-start; }
+    .step-col  { display: flex; flex-direction: column; align-items: center; }
+    .step-circle {
+      width: 26px; height: 26px; border-radius: 50%; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; flex-shrink: 0; font-weight: 700;
+    }
+    .step-line  { width: 2px; height: 28px; background: #e5e7eb; }
+    .step-text  { padding-top: 3px; }
+    .step-label { font-size: 12px; font-weight: 600; color: #333; }
+    .step-desc  { font-size: 10px; color: #aaa; margin-top: 1px; }
+    .see-steps-btn {
+      margin-top: 10px; background: none; border: none;
+      color: #f97316; font-size: 13px; cursor: pointer;
+      padding: 0; text-decoration: underline;
+      font-family: 'Sarabun', sans-serif;
+    }
+    #statusModal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4); z-index: 9999;
+      align-items: center; justify-content: center;
+    }
+    .modal-box {
+      background: #fff; border-radius: 16px; padding: 28px 24px;
+      width: 90%; max-width: 360px; position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 12px; right: 16px;
+      background: none; border: none; font-size: 20px;
+      cursor: pointer; color: #aaa;
+    }
+    .modal-title { margin: 0 0 20px; font-size: 16px; color: #333; font-weight: 700; }
+    .modal-step-row  { display: flex; gap: 14px; align-items: flex-start; }
+    .modal-step-col  { display: flex; flex-direction: column; align-items: center; }
+    .modal-step-circle {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+    .modal-step-line { width: 2px; height: 32px; background: #e5e7eb; }
+  </style>
+</head>
+<body>
+
+  <div class="layout">
+
+    <div class="form-col">
+      <div class="card">
+
+        <header>
+          <div style="text-align:center; margin-bottom:20px;">
+            <img src="https://media.tenor.com/cd-Tnw2IxD0AAAAm/hachiware-dance.webp"
+                 alt="banner" style="max-width:100%; border-radius:12px;">
+          </div>
+          <div>
+            <img src="https://drive.google.com/thumbnail?id=1Dr6zUTCE_1RGxq8Vz7QV8TG0nz0cNLXY&sz=w1920"
+                 alt="รูปบรีฟงาน" style="width:100%; height:auto; border-radius:8px;" />
+          </div>
+        </header>
+
+        <div class="queue-banner" id="queue-banner">
+          <div class="queue-banner-title">📋 สถานะคิวปัจจุบัน</div>
+          <div class="queue-banner-loading" id="queue-loading">กำลังโหลด...</div>
+          <div class="queue-banner-content" id="queue-content">
+            🎨 คิวปกติ: <span class="val" id="q-normal"></span>
+            &nbsp;|&nbsp;
+            🎨 Custom: <span class="val" id="q-custom"></span><br>
+            📅 กำหนดส่งคิวสุดท้าย: <span class="val" id="q-due"></span><br>
+            <span id="q-slots-wrap">
+              🟢 คิวปกติที่เหลือ: <span id="q-slots" class="slots-ok"></span> ช่อง
+            </span>
+            <div class="wait-box" id="q-wait-wrap">
+              <div class="wait-box-title">⏳ เวลารอโดยประมาณสำหรับการเปิดรับคิวปกรอบใหม่ </div>
+              <div class="wait-box-body">
+                📌 คิวก่อนหน้า: <strong id="q-before-count">—</strong> คิว<br>
+                🕐 รอประมาณ: <strong id="q-wait-days">—</strong><br>
+                📆 คาดว่าเริ่มได้: <strong id="q-start-date">—</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">กรอกอีเมลของคุณเท่านั้น</div>
+          <input type="email" id="searchKey" placeholder="เช่น yourname@email.com เท่านั้น" />
+          <span class="radio-desc">หากไม่แน่ใจว่าใช้อีเมลใด สามารถสอบถามนักวาดได้โดยตรง</span>
+          <!-- ✅ แก้ 1: เพิ่ม type="button" กัน form submit -->
+          <button type="button" class="btn" id="searchBtn" onclick="searchStatus()">✦ ค้นหาสถานะงาน ✦</button>
+          <div id="result-zone"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="timeline-col">
+      <div class="side-card">
+        <div class="timeline-title">📋 ขั้นตอนการดำเนินงาน</div>
+        <div style="display:flex; flex-direction:column;">
+
+          <div class="step-row">
+            <div class="step-col">
+              <div class="step-circle" style="background:#C52D49;">1</div>
+              <div class="step-line"></div>
+            </div>
+            <div class="step-text">
+              <div class="step-label">รอยืนยัน</div>
+              <div class="step-desc">ได้รับงานแล้ว รอการติดต่อจากนักวาด</div>
+            </div>
+          </div>
+
+          <div class="step-row">
+            <div class="step-col">
+              <div class="step-circle" style="background:#66BCD1;">2</div>
+              <div class="step-line"></div>
+            </div>
+            <div class="step-text">
+              <div class="step-label">ตกลงรับงาน</div>
+              <div class="step-desc">ยืนยันรับงานแล้ว กำลังดำเนินการ</div>
+            </div>
+          </div>
+
+          <div class="step-row">
+            <div class="step-col">
+              <div class="step-circle" style="background:#D0BD63;">3</div>
+              <div class="step-line"></div>
+            </div>
+            <div class="step-text">
+              <div class="step-label">ส่งภาพร่าง</div>
+              <div class="step-desc">ส่งภาพร่างให้ตรวจสอบ</div>
+            </div>
+          </div>
+
+          <div class="step-row">
+            <div class="step-col">
+              <div class="step-circle" style="background:#B2DF6A;">4</div>
+              <div class="step-line"></div>
+            </div>
+            <div class="step-text">
+              <div class="step-label">ชำระเงินแล้ว</div>
+              <div class="step-desc">ได้รับการชำระเงินแล้ว</div>
+            </div>
+          </div>
+
+          <div class="step-row">
+            <div class="step-col">
+              <div class="step-circle" style="background:#DF9682;">5</div>
+            </div>
+            <div class="step-text">
+              <div class="step-label">ส่งงานแล้ว</div>
+              <div class="step-desc">ส่งงานเสร็จสมบูรณ์</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div id="result-zone-side" style="display:none;"></div>
+    </div>
+
+  </div>
+
+  <div id="statusModal" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-box">
+      <button type="button" class="modal-close" onclick="document.getElementById('statusModal').style.display='none'">✕</button>
+      <div class="modal-title">ขั้นตอนการดำเนินงาน</div>
+      <div id="modalSteps"></div>
+    </div>
+  </div>
+
+  <script>
+  //<![CDATA[
+
+    function calcWaitDays(fromDate, toDateStr, holidays) {
+      var to  = new Date(toDateStr);
+      var cur = new Date(fromDate);
+      if (cur >= to) return 0;
+      var count = 0;
+      cur.setDate(cur.getDate() + 1);
+      while (cur <= to) {
+        var s = cur.toISOString().split("T")[0];
+        if (!holidays.includes(s)) count++;
+        cur.setDate(cur.getDate() + 1);
+      }
+      return count;
+    }
+
+    function formatThaiDate(dateStr) {
+      var d = new Date(dateStr);
+      return d.toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" });
+    }
+
+    function showStatusModal(btn) {
+      var currentStatus = btn.getAttribute("data-status");
+      var steps = [
+        { key: "รอยืนยัน",     desc: "ได้รับงานแล้ว รอการติดต่อจากนักวาด" },
+        { key: "ตกลงรับงาน",   desc: "ยืนยันรับงานแล้ว โปรดรอภาพร่าง" },
+        { key: "ส่งภาพร่าง",   desc: "ส่งภาพร่างให้ตรวจสอบ" },
+        { key: "ชำระเงินแล้ว", desc: "ได้รับการชำระเงินแล้ว" },
+        { key: "ส่งงานแล้ว",   desc: "ส่งงานเสร็จสมบูรณ์" }
+      ];
+
+      var currentIdx = steps.findIndex(function(s) { return s.key === currentStatus; });
+      var html = '<div style="display:flex; flex-direction:column;">';
+
+      steps.forEach(function(step, i) {
+        var isDone    = i < currentIdx;
+        var isCurrent = i === currentIdx;
+        var isLast    = i === steps.length - 1;
+
+        var circleStyle = isDone
+          ? 'background:#22c55e; color:#fff;'
+          : isCurrent
+            ? 'background:#f97316; color:#fff; box-shadow:0 0 0 4px #fed7aa;'
+            : 'background:#e5e7eb; color:#aaa;';
+
+        var labelStyle = isCurrent
+          ? 'color:#f97316; font-weight:700;'
+          : isDone ? 'color:#333; font-weight:600;' : 'color:#aaa; font-weight:600;';
+
+        var descStyle = (isDone || isCurrent) ? 'color:#aaa;' : 'color:#ccc;';
+        var icon      = isDone ? '✓' : isCurrent ? '●' : (i + 1);
+
+        html +=
+          '<div class="modal-step-row">' +
+            '<div class="modal-step-col">' +
+              '<div class="modal-step-circle" style="' + circleStyle + '">' + icon + '</div>' +
+              (!isLast ? '<div class="modal-step-line"></div>' : '') +
+            '</div>' +
+            '<div style="padding-top:4px;">' +
+              '<div style="font-size:14px; ' + labelStyle + '">' +
+                step.key + (isCurrent ? ' ← กำลังดำเนินการ' : '') +
+              '</div>' +
+              '<div style="font-size:12px; ' + descStyle + '">' + step.desc + '</div>' +
+            '</div>' +
+          '</div>';
+      });
+
+      html += '</div>';
+      document.getElementById("modalSteps").innerHTML = html;
+      document.getElementById("statusModal").style.display = "flex";
+    }
+
+    window.onload = function() {
+      google.script.run
+        .withSuccessHandler(function(info) {
+          document.getElementById("queue-loading").style.display = "none";
+          document.getElementById("queue-content").style.display = "block";
+
+          document.getElementById("q-normal").textContent = info.commissionCount + " / " + info.maxCommissionQueue;
+          document.getElementById("q-custom").textContent = info.customCount + " คิว";
+          document.getElementById("q-due").textContent    = info.lastDueDate;
+
+          var slotsWrap = document.getElementById("q-slots-wrap");
+          var slotsEl   = document.getElementById("q-slots");
+
+          if (info.slotsLeft <= 0) {
+            document.getElementById("queue-banner").classList.add("full");
+            slotsWrap.innerHTML = "🔴 ขณะนี้คิวเต็มแล้วค่ะ";
+            slotsWrap.className = "slots-full";
+          } else {
+            slotsEl.textContent = info.slotsLeft;
+          }
+
+          var holidays    = info.holidays || [];
+          var dates       = info.activeQueueDates || [];
+          var today       = new Date();
+          var todayStr    = today.toISOString().split("T")[0];
+          var futureDates = dates.filter(function(d) { return d >= todayStr; });
+          var startStr    = futureDates.length > 0 ? futureDates[futureDates.length - 1] : todayStr;
+          var waitDays    = calcWaitDays(today, startStr, holidays);
+
+          document.getElementById("q-before-count").textContent = futureDates.length;
+          document.getElementById("q-wait-days").textContent    = waitDays > 0 ? "~" + waitDays + " วันทำการ" : "ได้งานทันที";
+          document.getElementById("q-start-date").textContent   = waitDays > 0 ? formatThaiDate(startStr) : "เริ่มได้เลย";
+          document.getElementById("q-wait-wrap").style.display  = "block";
+        })
+        .withFailureHandler(function() {
+          document.getElementById("queue-loading").textContent = "ไม่สามารถโหลดข้อมูลคิวได้";
+        })
+        .getQueueInfo();
+    };
+
+    function searchStatus() {
+      var searchKey  = document.getElementById("searchKey").value.trim();
+      var resultSide = document.getElementById("result-zone-side");
+      var btn        = document.getElementById("searchBtn");
+
+      if (!searchKey) {
+        resultSide.innerHTML = '<div class="error-box">⚠️ กรุณากรอกอีเมลด้วยนะคะ</div>';
+        resultSide.style.display = "block";
+        return;
+      }
+
+      btn.disabled    = true;
+      btn.textContent = "กำลังค้นหา...";
+      resultSide.style.display = "none";
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.disabled    = false;
+          btn.textContent = "✦ ค้นหาสถานะงาน ✦";
+          resultSide.style.display = "block";
+
+          if (res.success) {
+            var html = '';
+            res.orders.forEach(function(order) {
+              html +=
+                '<div class="order-item">' +
+                  '<div class="order-title">' + order.jobType.replace(' (', '<br>(') + '</div>' +
+                  '<div class="order-date">วันที่สั่งซื้อ: ' + order.date + '</div>' +
+                  '<div class="order-date" style="margin-bottom:10px;">ชื่อ: คุณ ' + order.name + '</div>' +
+                  '<div>สถานะงาน: <span class="status-badge" data-status="' + order.status + '">' + order.status + '</span></div>' +
+                  '<div class="queue-info">' +
+                    '🔶 ลำดับคิว: <strong>' + order.queueNumber + '</strong>' +
+                    '<br>📅 กำหนดเสร็จ: <strong>' + order.dueDate + '</strong>' +
+                  '</div>' +
+                  '<button type="button" class="see-steps-btn" onclick="showStatusModal(this)" data-status="' + order.status + '">ดูสถานะปัจจุบัน →</button>' +
+                '</div>';
+            });
+            resultSide.innerHTML = html;
+          } else {
+            resultSide.innerHTML = '<div class="error-box">⚠️ ' + res.message + '</div>';
+          }
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled    = false;
+          btn.textContent = "✦ ค้นหาสถานะงาน ✦";
+          resultSide.style.display = "block";
+          resultSide.innerHTML = '<div class="error-box">⚠️ เกิดข้อผิดพลาดของระบบ: ' + err.message + '</div>';
+        })
+        .checkCustomerStatus(searchKey);
+    }
+
+  //]]>
+  </script>
+
+</body>
+</html>

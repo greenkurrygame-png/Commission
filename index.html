@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Commissions</title>
+  <title>รับคอมมิชชั่น</title>
   <link rel="icon" href="https://pbs.twimg.com/profile_images/1770426683377799168/baUjsht2_400x400.png" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Serif+Thai:wght@400;700&display=swap" rel="stylesheet" />
   <style>
@@ -361,7 +361,7 @@
         <div class="field-label">อีเมล <span class="req">*</span>
           <span class="field-hint">พิมพ์อีเมลให้ครบ เช่น yourname@gmail.com</span>
         </div>
-        <input type="text" id="email" placeholder="กรุณาพิมพ์เป็นภาษาอังกฤษเท่านั้น" maxlength="100"
+        <input type="text" id="email" placeholder="กรุณากรอกเป็นภาษาอังกฤษและตัวอักษรพิเศษเท่านั้น" maxlength="100"
           autocomplete="off" autocorrect="off" spellcheck="false" required
           oninput="this.value=this.value.replace(/[^a-zA-Z0-9@._%+\-]/g,''); document.getElementById('error-toast').classList.remove('show')"
           onblur="validateEmail(this)" />
@@ -476,12 +476,12 @@
         <!-- ช่องเสนอราคา (แสดงเฉพาะ custom_offer) -->
         <div id="price-field" class="field" style="display:none;">
           <div class="field-label">ราคาที่คุณต้องการเสนอ (บาท) <span class="req">*</span></div>
-          <input type="number" id="offeredPrice" placeholder="ใส่แค่ตัวเลขเท่านั้น ใส่ + หรือ - จะให้กรอกใหม่" min="1"
+          <input type="number" id="offeredPrice" placeholder="ระบุเป็นตัวเลขเท่านั้น ใส่ + หรือ - จะให้กรอกใหม่" min="1"
             oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10); checkOfferPrice()" />
           <!-- แจ้งเตือนราคาต่ำกว่าเรท -->
           <div id="offer-warning">
             ⚠️ ราคาที่คุณเสนอ (<span id="warn-offer">0</span> บาท) ต่ำกว่าราคาประเมินตามเรทมาตรฐาน
-            (<span id="warn-base">0</span> บาท) — เพื่อเพิ่มโอกาสได้รับคัดเลือก แนะนำให้เสนอราคาเท่ากับหรือสูงกว่านี้ค่ะ
+            (<span id="warn-base">0</span> บาท) — เพื่อเพิ่มโอกาสได้รับคัดเลือก แนะนำให้เสนอราคาสูงกว่านี้ค่ะ
           </div>
         </div>
 
@@ -497,7 +497,7 @@
               <span class="radio-visual"></span>
               <div class="radio-text">
                 โพสต์ได้ตามปกติ
-                <span class="radio-desc">ยินดีให้นำผลงานลงสื่อโซเชียลและพอร์ตได้</span>
+                <span class="radio-desc">ยินดีให้นำผลงานลงสื่อโซเชียลและพอร์ตได้ หรือนำไปไลฟ์สดตอนวาดได้</span>
               </div>
             </label>
             <label class="radio-row">
@@ -522,16 +522,18 @@
       <div class="field">
         <div class="field-label">
           กำหนดส่งงานเบื้องต้น <span class="req">*</span>
-          <span class="field-hint">โปรดระบุเวลาคร่าวๆที่ต้องการ...</span>
+          <span class="field-hint">โปรดระบุเวลาคร่าวๆที่ต้องการ อาจจะมีการปรับเปลี่ยนภายหลังได้</span>
         </div>
         <input type="date" id="dueDate" min="" />
       </div>
 
       <div class="field">
         <div class="field-label">รายละเอียดเพิ่มเติม (ถ้ามี)</div>
-        <textarea id="details" placeholder="รายละเอียดอื่นๆ ถึงนักวาด..." maxlength="500"></textarea>
+        <textarea id="details" placeholder="รายละเอียดอื่นๆที่อยากแจ้งนักวาด..." maxlength="500"></textarea>
         <div class="field-hint">จำกัด 500 ตัวอักษร</div>
       </div>
+
+      <div id="countdown-banner" style="display:none; text-align:center; font-size:13px; font-weight:600; color:#856404; background:#fff3cd; border:1.5px solid #ffc107; border-radius:8px; padding:10px 14px; margin-top:24px; line-height:1.6;"></div>
 
       <button class="btn" id="submitBtn">
         <div class="spinner"></div>
@@ -544,6 +546,63 @@
 
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxBvbXELIDEVe_VkmedB7TN-YQDpiGKiOlGR4dFSPT6TOVMgjJ6O3FeD0dWV7kxX2tPOA/exec";
+
+// ==========================================
+// ระบบเปิด-ปิดฟอร์ม: กำหนดวัน-เวลาที่จะเปิดรับ
+// รูปแบบ: "YYYY-MM-DDTHH:MM:SS" (เวลาตามเครื่องผู้ใช้)
+// ==========================================
+const OPEN_AT = new Date("2026-06-20T20:20:00");
+
+function checkFormOpen() {
+  const now = new Date();
+  if (now < OPEN_AT) {
+    const openStr = OPEN_AT.toLocaleString("th-TH", {
+      day: "numeric", month: "long", year: "numeric",
+      hour: "2-digit", minute: "2-digit"
+    });
+    showError("ขออภัยค่ะ ระบบจะเปิดให้ส่งคำขอวันที่ " + openStr + " นะคะ");
+    return false;
+  }
+  return true;
+}
+
+// ตัวจับเวลานับถอยหลัง: ปลดล็อกปุ่มส่งอัตโนมัติเมื่อถึงเวลาเปิดรับ
+function startCountdown() {
+  const btn     = document.getElementById("submitBtn");
+  const banner  = document.getElementById("countdown-banner");
+
+  function tick() {
+    const now  = new Date();
+    const diff = OPEN_AT - now;
+
+    if (diff <= 0) {
+      btn.disabled = false;
+      banner.style.display = "none";
+      clearInterval(timer);
+      return;
+    }
+
+    btn.disabled = true;
+    banner.style.display = "block";
+
+    const totalSec = Math.floor(diff / 1000);
+    const days  = Math.floor(totalSec / 86400);
+    const hours = Math.floor((totalSec % 86400) / 3600);
+    const mins  = Math.floor((totalSec % 3600) / 60);
+    const secs  = totalSec % 60;
+
+    let parts = [];
+    if (days  > 0) parts.push(days + " วัน");
+    if (hours > 0 || days > 0) parts.push(hours + " ชม.");
+    parts.push(mins + " นาที");
+    parts.push(secs + " วินาที");
+
+    banner.textContent = "⏳ ฟอร์มจะเปิดให้ส่งคำขอในอีก " + parts.join(" ");
+  }
+
+  tick();
+  const timer = setInterval(tick, 1000);
+}
 
 // เก็บราคาปัจจุบันที่คำนวณได้ (ใช้เปรียบเทียบกับราคาที่เสนอ)
 let currentCalcPrice = 0;
@@ -665,6 +724,8 @@ function updateAddonDescriptions(jobType, charCount) {
 }
 
 function submitForm() {
+  if (!checkFormOpen()) return;
+
   const idsToCheck = [
     "error-toast", "orderType", "offeredPrice", "jobType",
     "add_fullbody", "add_fantasy", "add_bg", "add_extra_char", "add_horizontal",
@@ -818,6 +879,9 @@ document.getElementById("submitBtn").addEventListener("click", submitForm);
   const dd = String(d.getDate()).padStart(2, "0");
   document.getElementById("dueDate").min = `${yyyy}-${mm}-${dd}`;
 })();
+
+// เริ่มตัวจับเวลานับถอยหลัง (จะปลดล็อกปุ่มอัตโนมัติเมื่อถึงเวลา)
+startCountdown();
 </script>
 
 </body>

@@ -363,7 +363,7 @@
         </div>
         <input type="text" id="email" placeholder="แนะนำ G-mail" maxlength="100"
           autocomplete="off" autocorrect="off" spellcheck="false" required
-          oninput="this.value=this.value.replace(/[^a-zA-Z0-9@._%+\-]/g,'')"
+          oninput="this.value=this.value.replace(/[^a-zA-Z0-9@._%+\-]/g,''); document.getElementById('error-toast').classList.remove('show')"
           onblur="validateEmail(this)" />
       </div>
 
@@ -796,6 +796,9 @@ function validateEmail(input) {
   if (!/\.[a-zA-Z]{2,}$/.test(domainPart)) {
     return showError("กรุณาพิมพ์นามสกุลโดเมนของอีเมลให้ครบ เช่น .com");
   }
+
+  // อีเมลถูกต้องแล้ว ซ่อนคำเตือน
+  document.getElementById("error-toast").classList.remove("show");
 }
 
 function showError(msg) {

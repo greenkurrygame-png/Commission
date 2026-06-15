@@ -320,9 +320,108 @@
     }
     .sum-val.empty { color: #C3A4A9; font-style: italic; font-size: 12px; }
     .sum-val.price { color: var(--ink); font-weight: 700; font-size: 15px; }
+
+    /* ── กล่องแจ้งเตือนต้อนรับ ── */
+    #welcome-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(26,26,46,.55); backdrop-filter: blur(5px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2000; padding: 20px;
+      animation: fadeInOverlay .4s ease;
+    }
+    @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+    #welcome-box {
+      background: var(--white); border-radius: 20px; max-width: 480px; width: 100%;
+      box-shadow: 0 20px 60px rgba(192,86,122,.2), 0 4px 16px rgba(0,0,0,.08);
+      overflow: hidden;
+      animation: popIn .45s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popIn { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .wc-header {
+      background: linear-gradient(135deg, var(--rose) 0%, #e8698a 100%);
+      padding: 22px 24px 18px;
+      text-align: center; color: var(--white);
+    }
+    .wc-emoji { font-size: 36px; line-height: 1; margin-bottom: 6px; }
+    .wc-header h3 {
+      font-family: 'Noto Serif Thai', serif; font-size: 20px; font-weight: 700;
+      color: var(--white); margin: 0;
+    }
+    .wc-header p { font-size: 13px; color: rgba(255,255,255,.85); margin-top: 4px; }
+    .wc-body { padding: 22px 24px 18px; }
+    .wc-section {
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 12px;
+    }
+    .wc-section.normal {
+      background: #fff5f7; border: 1.5px solid var(--rose-dim);
+    }
+    .wc-section.offer {
+      background: #fff9f0; border: 1.5px solid #f5c07a;
+    }
+    .wc-section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+      margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+    }
+    .wc-section.normal .wc-section-title { color: var(--rose); }
+    .wc-section.offer .wc-section-title { color: #c07a20; }
+    .wc-section-body { font-size: 14px; font-weight: 500; line-height: 1.6; color: var(--ink-soft); }
+    .wc-section-body strong { color: var(--ink); font-weight: 700; }
+    .wc-apology {
+      background: var(--paper); border-radius: 10px; padding: 12px 14px;
+      font-size: 13px; color: #a07070; line-height: 1.65; text-align: center;
+      margin-bottom: 4px;
+    }
+    .wc-apology span { font-size: 16px; }
+    .wc-close-btn {
+      width: 100%; padding: 13px; margin-top: 14px;
+      background: linear-gradient(135deg, var(--rose) 0%, #e8698a 100%);
+      color: var(--white); border: none; border-radius: 10px;
+      font-family: 'Sarabun', sans-serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity .2s, transform .1s; letter-spacing: .03em;
+    }
+    .wc-close-btn:hover { opacity: .88; }
+    .wc-close-btn:active { transform: scale(.98); }
   </style>
 </head>
 <body>
+
+<!-- ── กล่องแจ้งเตือนต้อนรับ ── -->
+<div id="welcome-overlay">
+  <div id="welcome-box">
+    <div class="wc-header">
+      <div class="wc-emoji">🌸</div>
+      <h3>ประกาศรับคิวรอบนี้</h3>
+      <p>โปรดอ่านรายละเอียดก่อนกรอกแบบฟอร์มนะคะ</p>
+    </div>
+    <div class="wc-body">
+
+      <div class="wc-section normal">
+        <div class="wc-section-title">🎨 คิวปกติ (ตามเรท)</div>
+        <div class="wc-section-body">
+          รอบนี้เปิดรับ <strong>คิวปกติเพียง 2 คิวเท่านั้น</strong> ค่ะ
+        </div>
+      </div>
+
+      <div class="wc-section offer">
+        <div class="wc-section-title">✨ รอบเสนอราคา (Custom Offer)</div>
+        <div class="wc-section-body">
+          รอบเสนอราคาจะคัดเลือก <strong>เพียง 2 งานเท่านั้น</strong> ค่ะ
+        </div>
+      </div>
+
+      <div class="wc-apology">
+        <span>🙏</span><br>
+        เนื่องจากปริมาณงานสะสมยังคงเยอะมากในขณะนี้<br>
+        จึงขอจำกัดจำนวนรับเพื่อรักษาคุณภาพงานให้ดีที่สุดค่ะ<br>
+        <strong>ขออภัยมา ณ ที่นี้ด้วยนะคะ 💕</strong>
+      </div>
+
+      <button class="wc-close-btn" onclick="document.getElementById('welcome-overlay').remove()">
+        ✦ รับทราบแล้ว ไปกรอกฟอร์มเลย! ✦
+      </button>
+    </div>
+  </div>
+</div>
 
 <div class="gallery-container">
   <div style="text-align: center; margin-bottom: 24px;">

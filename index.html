@@ -251,6 +251,75 @@
     .field input[type="date"]:focus { outline: none; border-color: #c4b5fd; }
     .field-hint { font-size: 0.75rem; color: #F7C4B6; font-weight: normal; }
     #submitBtn { margin-top: 24px; }
+
+    /* ── กล่องสรุปข้อมูลเรียลไทม์ ── */
+    #summary-box {
+      margin-top: 18px;
+      background: rgba(255,255,255,0.5);
+      border: 1.5px solid var(--ink);
+      border-radius: var(--radius);
+      overflow: hidden;
+      font-size: 13px;
+      box-shadow: 0 2px 12px rgba(230,147,128,.15);
+    }
+    #summary-box .sum-header {
+      background: var(--ink);
+      color: var(--white);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #summary-box .sum-body {
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    #summary-box .sum-empty {
+      color: var(--ink);
+      opacity: .55;
+      font-size: 12px;
+      text-align: center;
+      padding: 10px 0 4px;
+    }
+    .sum-row {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 6px;
+      align-items: baseline;
+      border-bottom: 0.5px dashed var(--dust);
+      padding-bottom: 6px;
+    }
+    .sum-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .sum-key {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+    .sum-val {
+      color: var(--ink-soft);
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    /* ตัดข้อความยาวสำหรับ url และ หมายเหตุ */
+    .sum-val.truncate {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-all;
+      cursor: help;
+    }
+    .sum-val.empty { color: #C3A4A9; font-style: italic; font-size: 12px; }
+    .sum-val.price { color: var(--ink); font-weight: 700; font-size: 15px; }
   </style>
 </head>
 <body>
@@ -296,6 +365,14 @@
          href="Status.html">
         <span class="btn-text">✦ ตรวจสอบสถานะคิวงาน ✦</span>
       </a>
+    </div>
+
+    <!-- กล่องสรุปข้อมูลเรียลไทม์ -->
+    <div id="summary-box" style="margin-top: 14px;">
+      <div class="sum-header">📋 สรุปข้อมูลที่จะส่ง (เรียลไทม์)</div>
+      <div class="sum-body" id="sum-body">
+        <div class="sum-empty">เริ่มกรอกข้อมูลเพื่อดูสรุปที่นี่ค่ะ ✦</div>
+      </div>
     </div>
   </div>
 </div>
@@ -681,6 +758,7 @@ function updateCalculator() {
 
   // อัปเดตคำเตือนถ้ากำลังอยู่ใน custom_offer
   if (orderType === "custom_offer") checkOfferPrice();
+  updateSummary();
 }
 
 // ตรวจสอบราคาที่เสนอ vs ราคาที่คำนวณ
@@ -882,6 +960,114 @@ document.getElementById("submitBtn").addEventListener("click", submitForm);
 
 // เริ่มตัวจับเวลานับถอยหลัง (จะปลดล็อกปุ่มอัตโนมัติเมื่อถึงเวลา)
 startCountdown();
+
+// ── กล่องสรุปข้อมูลเรียลไทม์ ──
+function updateSummary() {
+  const body = document.getElementById('sum-body');
+  if (!body) return;
+
+  const name       = (document.getElementById('name')?.value || '').trim();
+  const contact    = (document.getElementById('contact')?.value || '').trim();
+  const email      = (document.getElementById('email')?.value || '').trim();
+  const orderType  = document.getElementById('orderType')?.value || '';
+  const jobTypeEl  = document.getElementById('jobType');
+  const jobType    = jobTypeEl?.value || '';
+  const jobTypeText = jobType ? jobTypeEl.options[jobTypeEl.selectedIndex]?.text : '';
+  const charCountEl = document.getElementById('charCount');
+  const charCountVisible = document.getElementById('char-count-field')?.style.display !== 'none';
+  const charCount  = charCountVisible ? (charCountEl?.options[charCountEl.selectedIndex]?.text || '') : '';
+  const briefLink  = (document.getElementById('briefLink')?.value || '').trim();
+  const dueDate    = document.getElementById('dueDate')?.value || '';
+  const details    = (document.getElementById('details')?.value || '').trim();
+  const publishRuleEl = document.querySelector('input[name="publishRule"]:checked');
+  const publishRule = publishRuleEl?.value || '';
+
+  // addons
+  const addons = [];
+  if (document.getElementById('add_fullbody')?.checked) addons.push('เต็มตัว (Full Body)');
+  if (document.getElementById('add_fantasy')?.checked)  addons.push('แฟนตาซี/ดีเทลเยอะ');
+  if (document.getElementById('add_bg')?.checked)       addons.push('ฉากหลังละเอียด');
+  if (document.getElementById('add_extra_char')?.checked) addons.push('เพิ่มตัวละคร (+5,000)');
+  if (document.getElementById('add_horizontal')?.checked) addons.push('ภาพแนวนอน (+5,000)');
+
+  // ราคา
+  let priceText = '';
+  if (orderType === 'normal' && currentCalcPrice > 0) {
+    priceText = currentCalcPrice.toLocaleString() + ' บาท (ตามเรท)';
+  } else if (orderType === 'custom_offer') {
+    const offerVal = parseInt(document.getElementById('offeredPrice')?.value) || 0;
+    priceText = offerVal > 0 ? offerVal.toLocaleString() + ' บาท (เสนอเอง)' : '';
+  }
+
+  // แปลง orderType label
+  const orderLabel = orderType === 'normal' ? 'คิวปกติ (ตามเรท)' : orderType === 'custom_offer' ? 'เสนอราคาเอง' : '';
+
+  // แปลง dueDate
+  let dueDateDisplay = '';
+  if (dueDate) {
+    const d = new Date(dueDate + 'T00:00:00');
+    dueDateDisplay = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  const rows = [
+    { key: 'ชื่อ',            val: name },
+    { key: 'ช่องทางติดต่อ',   val: contact },
+    { key: 'อีเมล',           val: email },
+    { key: 'รูปแบบงาน',       val: orderLabel },
+    { key: 'ประเภทงาน',       val: jobTypeText },
+    { key: 'จำนวนตัวละคร',    val: charCountVisible ? charCount : null },
+    { key: 'Add-ons',         val: addons.length ? addons.join(', ') : null },
+    { key: 'ราคา',            val: priceText, isPrice: true },
+    { key: 'สิทธิ์โพสต์',     val: publishRule },
+    { key: 'ลิ้งค์บรีฟ',      val: briefLink, truncate: true },
+    { key: 'กำหนดส่งงาน',     val: dueDateDisplay },
+    { key: 'หมายเหตุ',        val: details || null, truncate: true },
+  ].filter(r => r.val !== null);
+
+  // ตรวจว่ามีข้อมูลจริงมั้ย
+  const hasAny = rows.some(r => r.val);
+  if (!hasAny) {
+    body.innerHTML = '<div class="sum-empty">เริ่มกรอกข้อมูลเพื่อดูสรุปที่นี่ค่ะ ✦</div>';
+    return;
+  }
+
+  body.innerHTML = rows.map(r => {
+    const isTruncate = r.truncate && r.val && r.val.length > 60;
+    const cls = [
+      'sum-val',
+      r.isPrice ? 'price' : '',
+      !r.val ? 'empty' : '',
+      isTruncate ? 'truncate' : ''
+    ].filter(Boolean).join(' ');
+    const titleAttr = isTruncate ? ` title="${r.val.replace(/"/g, '&quot;')}"` : '';
+    return `
+    <div class="sum-row">
+      <div class="sum-key">${r.key}</div>
+      <div class="${cls}"${titleAttr}>${r.val || '—'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── ผูก event listeners ทุก field กับ updateSummary ──
+(function wireUpSummary() {
+  const ids = ['name','contact','email','briefLink','details','dueDate','offeredPrice','orderType','jobType','charCount'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', updateSummary);
+    el.addEventListener('change', updateSummary);
+  });
+  // radio publishRule
+  document.querySelectorAll('input[name="publishRule"]').forEach(el => {
+    el.addEventListener('change', updateSummary);
+  });
+  // checkboxes addons
+  ['add_fullbody','add_fantasy','add_bg','add_extra_char','add_horizontal'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', updateSummary);
+  });
+  // initial render
+  updateSummary();
+})();
 </script>
 
 </body>

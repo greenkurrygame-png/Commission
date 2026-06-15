@@ -59,57 +59,6 @@ function formatThaiDate(dateStr) {
   return d.toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" });
 }
 
-function showStatusModal(btn) {
-  var currentStatus = btn.getAttribute("data-status");
-  var steps = [
-    { key: "รอยืนยัน",     desc: "ได้รับงานแล้ว รอการติดต่อจากนักวาด" },
-    { key: "ตกลงรับงาน",   desc: "ยืนยันรับงานแล้ว โปรดรอภาพร่าง" },
-    { key: "ส่งภาพร่าง",   desc: "ส่งภาพร่างให้ตรวจสอบ" },
-    { key: "ชำระเงินแล้ว", desc: "ได้รับการชำระเงินแล้ว" },
-    { key: "ส่งงานแล้ว",   desc: "ส่งงานเสร็จสมบูรณ์" }
-  ];
-
-  var currentIdx = steps.findIndex(function(s) { return s.key === currentStatus; });
-  var html = '<div style="display:flex; flex-direction:column;">';
-
-  steps.forEach(function(step, i) {
-    var isDone    = i < currentIdx;
-    var isCurrent = i === currentIdx;
-    var isLast    = i === steps.length - 1;
-
-    var circleStyle = isDone
-      ? 'background:#22c55e; color:#fff;'
-      : isCurrent
-        ? 'background:#f97316; color:#fff; box-shadow:0 0 0 4px #fed7aa;'
-        : 'background:#e5e7eb; color:#aaa;';
-
-    var labelStyle = isCurrent
-      ? 'color:#f97316; font-weight:700;'
-      : isDone ? 'color:#333; font-weight:600;' : 'color:#aaa; font-weight:600;';
-
-    var descStyle = (isDone || isCurrent) ? 'color:#aaa;' : 'color:#ccc;';
-    var icon      = isDone ? '✓' : isCurrent ? '●' : (i + 1);
-
-    html +=
-      '<div class="modal-step-row">' +
-        '<div class="modal-step-col">' +
-          '<div class="modal-step-circle" style="' + circleStyle + '">' + icon + '</div>' +
-          (!isLast ? '<div class="modal-step-line"></div>' : '') +
-        '</div>' +
-        '<div style="padding-top:4px;">' +
-          '<div style="font-size:14px; ' + labelStyle + '">' +
-            step.key + (isCurrent ? ' ← กำลังดำเนินการ' : '') +
-          '</div>' +
-          '<div style="font-size:12px; ' + descStyle + '">' + step.desc + '</div>' +
-        '</div>' +
-      '</div>';
-  });
-
-  html += '</div>';
-  document.getElementById("modalSteps").innerHTML = html;
-  document.getElementById("statusModal").style.display = "flex";
-}
-
 // สั่งให้โหลดข้อมูลคิวอัตโนมัติ
 window.addEventListener('DOMContentLoaded', (event) => {
   if (document.getElementById("queue-loading")) {
@@ -186,19 +135,51 @@ function searchStatus() {
     resultSide.style.display = "block";
 
     if (res.success) {
+      var steps = ["รอยืนยัน", "ตกลงรับงาน", "ส่งภาพร่าง", "ชำระเงินแล้ว", "ส่งงานแล้ว"];
+      var stepColors = {
+        "รอยืนยัน": "#EC5C77",
+        "ตกลงรับงาน": "#66BCD1",
+        "ส่งภาพร่าง": "#F0C16F",
+        "ชำระเงินแล้ว": "#B2DF6A",
+        "ส่งงานแล้ว": "#DF9682"
+      };
+
       var html = '';
       res.orders.forEach(function(order) {
+        var currentIdx = steps.indexOf(order.status);
+
+        var trackerHtml = '<div class="mini-tracker">';
+        steps.forEach(function(step, i) {
+          var isDone    = i < currentIdx;
+          var isCurrent = i === currentIdx;
+          var dotStyle  = isDone
+            ? 'background:' + stepColors[step] + '; color:#fff;'
+            : isCurrent
+              ? 'background:' + stepColors[step] + '; color:#fff; box-shadow:0 0 0 3px ' + stepColors[step] + '33;'
+              : 'background:#e5e7eb; color:#aaa;';
+          var dotIcon   = isDone ? '✓' : (i + 1);
+          var lineStyle = isDone ? 'background:' + stepColors[step] + ';' : 'background:#e5e7eb;';
+
+          trackerHtml += '<div class="mini-step">';
+          trackerHtml +=   '<div class="mini-dot" style="' + dotStyle + '">' + dotIcon + '</div>';
+          trackerHtml +=   '<div class="mini-step-label' + (isCurrent ? ' active' : '') + '">' + step + '</div>';
+          trackerHtml += '</div>';
+          if (i < steps.length - 1) {
+            trackerHtml += '<div class="mini-line" style="' + lineStyle + '"></div>';
+          }
+        });
+        trackerHtml += '</div>';
+
         html +=
           '<div class="order-item">' +
             '<div class="order-title">' + order.jobType.replace(' (', '<br>(') + '</div>' +
             '<div class="order-date">วันที่สั่งซื้อ: ' + order.date + '</div>' +
             '<div class="order-date" style="margin-bottom:10px;">ชื่อ: คุณ ' + order.name + '</div>' +
-            '<div>สถานะงาน: <span class="status-badge" data-status="' + order.status + '">' + order.status + '</span></div>' +
+            trackerHtml +
             '<div class="queue-info">' +
               '🔶 ลำดับคิว: <strong>' + order.queueNumber + '</strong>' +
               '<br>📅 กำหนดเสร็จ: <strong>' + order.dueDate + '</strong>' +
             '</div>' +
-            '<button type="button" class="see-steps-btn" onclick="showStatusModal(this)" data-status="' + order.status + '">ดูสถานะปัจจุบัน →</button>' +
           '</div>';
       });
       resultSide.innerHTML = html;

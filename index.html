@@ -460,9 +460,10 @@
       <span class="email-label">E-mail</span>
     </button>
     <div style="margin-top: 18px;">
-      <a class="btn"
+      <a class="btn" text-decoration: none
          href="Status.html">
         <span class="btn-text">✦ ตรวจสอบสถานะคิวงาน ✦</span>
+        
       </a>
     </div>
 
@@ -726,7 +727,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxBvbXELIDEVe_VkmedB
 // ระบบเปิด-ปิดฟอร์ม: กำหนดวัน-เวลาที่จะเปิดรับ
 // รูปแบบ: "YYYY-MM-DDTHH:MM:SS" (เวลาตามเครื่องผู้ใช้)
 // ==========================================
-const OPEN_AT = new Date("2026-06-20T20:20:00");
+const OPEN_AT = new Date("2026-06-20T20:00:00");
 
 function checkFormOpen() {
   const now = new Date();
@@ -1015,7 +1016,7 @@ function submitForm() {
     .catch(err => {
       btn.disabled = false;
       btn.classList.remove("loading");
-      btn.querySelector(".btn-text").textContent = "ส่งคำขอ ✦";
+      btn.querySelector(".btn-text").textContent = "✦ ส่งคำขอ ✦";
       showError("ระบบขัดข้องชั่วคราว: " + err.message);
     });
 }

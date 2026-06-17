@@ -6,6 +6,7 @@
   <title>Commissiond</title>
   <link rel="icon" href="https://pbs.twimg.com/profile_images/1770426683377799168/baUjsht2_400x400.png" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Serif+Thai:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://www.google.com/recaptcha/api.js?render=6Lf93iMtAAAAAMDvz7fS33Lz8a3Wf91iKX1pPsJf"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -688,7 +689,7 @@
 
       <div class="field">
         <div class="field-label">ลิ้งค์บรีฟงานเท่านั้น <span class="req">*</span></div>
-        <input type="url" id="briefLink" placeholder="https://docs.google.com/... หรือคลังบรีฟ"
+        <input type="url" id="briefLink" placeholder="ยอมรับเฉพาะ Google Docs/Drive, Notion, Canva, Figma เท่านั้น"
           required pattern="https?://.+" maxlength="500"
           title="กรุณาใส่ลิงก์เว็บที่ถูกต้อง เช่น https://docs.google.com/..." />
       </div>
@@ -720,6 +721,14 @@
 
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxBvbXELIDEVe_VkmedB7TN-YQDpiGKiOlGR4dFSPT6TOVMgjJ6O3FeD0dWV7kxX2tPOA/exec";
+const SUPABASE_URL = "https://dbkjnjuiofkfvhvbigbv.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRia2puanVpb2ZrZnZodmJpZ2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NzE5MjQsImV4cCI6MjA5NzI0NzkyNH0.q6cSdDS0mPdIgmZPqf7WQJkTeY01vxzFyPUBhiPM94o";
+const RECAPTCHA_SITE_KEY = "6Lf93iMtAAAAAMDvz7fS33Lz8a3Wf91iKX1pPsJf";
+const BRIEF_ALLOWED_DOMAINS = ["docs.google.com","drive.google.com","notion.so","notion.site","canva.com","figma.com","dropbox.com","onedrive.live.com","1drv.ms"];
+function validateBriefLink(url) {
+  try { const u = new URL(url); return BRIEF_ALLOWED_DOMAINS.some(d => u.hostname === d || u.hostname.endsWith("." + d)); }
+  catch { return false; }
+}
 
 // ==========================================
 // ระบบเปิด-ปิดฟอร์ม: กำหนดวัน-เวลาที่จะเปิดรับ
@@ -973,8 +982,13 @@ function submitForm() {
     return showError("กรุณาพิมพ์นามสกุลโดเมนของอีเมลให้ครบ เช่น .com");
   }
 
-  // ตรวจสอบว่าวันที่เลือกไม่เป็นวันที่ในอดีต
-  const todayStr = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+  // ตรวจสอบ domain ลิ้งค์บรีฟ
+  if (!validateBriefLink(briefLink)) {
+    return showError("กรุณาใส่ลิ้งค์บรีฟจาก Google Docs, Google Drive, Notion, Canva หรือ Figma เท่านั้นนะคะ");
+  }
+
+  // ตรวจสอบวันที่
+  const todayStr = new Date().toLocaleDateString("en-CA");
   if (dueDate < todayStr) {
     return showError("กรุณาเลือกวันที่ตั้งแต่วันนี้เป็นต้นไปนะคะ");
   }
@@ -982,41 +996,90 @@ function submitForm() {
   const btn = document.getElementById("submitBtn");
   btn.disabled = true;
   btn.classList.add("loading");
-  btn.querySelector(".btn-text").textContent = "กำลังลงทะเบียนคิว...";
+  btn.querySelector(".btn-text").textContent = "กำลังตรวจสอบ...";
 
-  fetch(SCRIPT_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      orderType, offeredPrice: finalPriceToSend, name, contact, email,
-      jobType: jobTypeText, charCount: charCountVal,
-      briefLink, details, publishRule, dueDate
-    })
-  })
-    .then(r => r.json())
-    .then(res => {
-      btn.disabled = false;
-      btn.classList.remove("loading");
-      btn.querySelector(".btn-text").textContent = "ส่งคำขอ ✦";
-      if (res.success) {
-        document.getElementById("form-wrap").querySelectorAll("input, select, textarea").forEach(el => el.value = "");
-        document.querySelectorAll("input[type=checkbox]").forEach(el => el.checked = false);
-        currentCalcPrice = 0;
-        document.getElementById("calculator-zone").style.display = "none";
-        document.getElementById("offer-warning").classList.remove("show");
-        delete document.getElementById("customOfferModal").dataset.shown;
-        const toast = document.getElementById("toast");
-        toast.classList.add("show");
-        toast.scrollIntoView({ behavior: "smooth", block: "center" });
-      } else {
-        showError(res.message);
+  grecaptcha.ready(async () => {
+    let recaptchaScore = null;
+    try {
+      const token = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "submit_commission" });
+      const verifyRes = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "verify_recaptcha", token })
+      }).then(r => r.json()).catch(() => ({ score: null }));
+      recaptchaScore = verifyRes.score ?? null;
+      if (recaptchaScore !== null && recaptchaScore < 0.4) {
+        btn.disabled = false;
+        btn.classList.remove("loading");
+        btn.querySelector(".btn-text").textContent = "✦ ส่งคำขอ ✦";
+        return showError("ระบบตรวจพบพฤติกรรมผิดปกติ กรุณาลองใหม่อีกครั้งนะคะ");
       }
-    })
-    .catch(err => {
+    } catch(e) { recaptchaScore = null; }
+
+    btn.querySelector(".btn-text").textContent = "กำลังลงทะเบียนคิว...";
+
+    // ตรวจอีเมลซ้ำภายใน 1 ชั่วโมง
+    try {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const dupCheck = await fetch(
+        `${SUPABASE_URL}/rest/v1/commission_submissions?email=eq.${encodeURIComponent(email)}&created_at=gte.${oneHourAgo}&select=id&limit=1`,
+        { headers: { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + SUPABASE_KEY } }
+      ).then(r => r.json());
+      if (Array.isArray(dupCheck) && dupCheck.length > 0) {
+        btn.disabled = false;
+        btn.classList.remove("loading");
+        btn.querySelector(".btn-text").textContent = "✦ ส่งคำขอ ✦";
+        return showError("อีเมลนี้เพิ่งส่งคำขอไปแล้วในช่วงชั่วโมงที่ผ่านมานะคะ กรุณารอสักครู่แล้วลองใหม่ค่ะ");
+      }
+    } catch(e) { /* ถ้าเช็คไม่ได้ให้ผ่านไปก่อน */ }
+
+    // บันทึกลง Supabase (server-side timestamp)
+    try {
+      const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/commission_submissions`, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + SUPABASE_KEY,
+          "Content-Type": "application/json",
+          "Prefer": "return=representation"
+        },
+        body: JSON.stringify({
+          order_type: orderType, job_type: jobTypeText, char_count: charCountVal,
+          name, contact, email, brief_link: briefLink,
+          offered_price: finalPriceToSend, publish_rule: publishRule,
+          due_date: dueDate, details, recaptcha_score: recaptchaScore
+        })
+      });
+      if (!insertRes.ok) throw new Error("บันทึกข้อมูลไม่สำเร็จ: " + insertRes.status);
+    } catch(e) {
       btn.disabled = false;
       btn.classList.remove("loading");
       btn.querySelector(".btn-text").textContent = "✦ ส่งคำขอ ✦";
-      showError("ระบบขัดข้องชั่วคราว: " + err.message);
-    });
+      return showError("ระบบขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้งนะคะ: " + e.message);
+    }
+
+    // ส่งไป Google Sheets เหมือนเดิม (สำรอง)
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        orderType, offeredPrice: finalPriceToSend, name, contact, email,
+        jobType: jobTypeText, charCount: charCountVal,
+        briefLink, details, publishRule, dueDate
+      })
+    }).catch(() => {});
+
+    btn.disabled = false;
+    btn.classList.remove("loading");
+    btn.querySelector(".btn-text").textContent = "ส่งคำขอ ✦";
+    document.getElementById("form-wrap").querySelectorAll("input, select, textarea").forEach(el => el.value = "");
+    document.querySelectorAll("input[type=checkbox]").forEach(el => el.checked = false);
+    currentCalcPrice = 0;
+    document.getElementById("calculator-zone").style.display = "none";
+    document.getElementById("offer-warning").classList.remove("show");
+    delete document.getElementById("customOfferModal").dataset.shown;
+    const toast = document.getElementById("toast");
+    toast.classList.add("show");
+    toast.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
 }
 
 function validateEmail(input) {

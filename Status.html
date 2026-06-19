@@ -77,17 +77,13 @@
     }
     .queue-banner.full { background: #fff0f0; border-color: #e8a2a2; }
     .queue-banner.full::before { background: linear-gradient(90deg, #e88282, #c0567a, #e88282); }
-
     .queue-banner-title {
       font-weight: 700; font-size: 14px; color: var(--ink);
       margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
     }
     .queue-banner-loading { color: #ccc; font-size: 13px; }
     .queue-banner-content { display: none; }
-    .queue-banner-content span.val { font-weight: 700; color: var(--ink); }
     .slots-full { color: #c0392b; font-weight: 700; }
-    .slots-ok   { color: #2e7d32; font-weight: 700; }
-
     .q-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -114,7 +110,6 @@
       font-weight: 700;
       color: var(--ink);
     }
-    .q-chip-full { grid-column: 1 / -1; }
     .q-due-chip {
       background: #fff;
       border: 1px solid #f5cfc7;
@@ -127,17 +122,6 @@
       gap: 6px;
       margin-bottom: 8px;
     }
-    .slots-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
-    }
-    .slots-badge.ok  { background: #e8f8ee; color: #2e7d32; border: 1px solid #a8dab5; }
-    .slots-badge.full { background: #fdeaea; color: #c0392b; border: 1px solid #e8a2a2; }
     .field { margin-bottom: 20px; }
     .field-label { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 7px; }
     #searchKey {
@@ -152,24 +136,22 @@
       background-color: #ffffff; box-shadow: 0 0 5px rgba(255,158,125,0.4);
     }
     .back-home-btn {
-    display: inline-block;
-    padding: 6px 16px;
-    font-size: 14px;
-    color: #bc7d6c; /* สีตัวอักษรโทนเดียวกับปุ่มหลัก */
-    background-color: transparent;
-    border: 1px solid #bc7d6c; /* เส้นขอบบางๆ */
-    border-radius: 20px; /* ขอบมนเข้ากับดีไซน์เดิม */
-    text-decoration: none;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-/* เอฟเฟกต์เมื่อเอาเมาส์ไปชี้ (Hover) */
-.back-home-btn:hover {
-    background-color: #DF9682;
-    color: #ffffff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
+      display: inline-block;
+      padding: 6px 16px;
+      font-size: 14px;
+      color: #bc7d6c;
+      background-color: transparent;
+      border: 1px solid #bc7d6c;
+      border-radius: 20px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .back-home-btn:hover {
+      background-color: #DF9682;
+      color: #ffffff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
     .btn {
       width: 100%; padding: 13px; background: var(--ink); color: var(--white);
       border: none; border-radius: 8px; font-size: 15px; font-weight: 600;
@@ -177,7 +159,6 @@
       font-family: 'Sarabun', sans-serif;
     }
     .btn:hover { background: var(--rose); }
-    #result-zone { margin-top: 24px; display: none; }
     .order-item {
       background: #fdf5f7; border: 1.5px solid var(--rose-dim);
       border-radius: 8px; padding: 16px; margin-bottom: 12px;
@@ -245,10 +226,6 @@
       background: linear-gradient(90deg, #f4a89a, #e8b4c8, #f4a89a);
       border-radius: 16px 16px 0 0;
     }
-    .busy-title {
-      font-size: 11px; font-weight: 700; color: #c8a4a0;
-      letter-spacing: 0.04em; margin-bottom: 10px;
-    }
     .busy-gauge {
       display: flex; border-radius: 12px; overflow: hidden;
       height: 36px; gap: 2px; background: #f5ebe8; padding: 3px;
@@ -261,10 +238,10 @@
     }
     .busy-seg.active { opacity: 1; }
     .busy-seg.passed { opacity: 0.5; }
-    .bs1 { background: #5DCAA5; color: #fff; font-weight: 700; }
-    .bs2 { background: #EF9F27; color: #fff; font-weight: 700; }
-    .bs3 { background: #D85A30; color: #fff; font-weight: 700; }
-    .bs4 { background: #E24B4A; color: #fff; font-weight: 700; }
+    .bs1 { background: #5DCAA5; color: #fff; }
+    .bs2 { background: #EF9F27; color: #fff; }
+    .bs3 { background: #D85A30; color: #fff; }
+    .bs4 { background: #E24B4A; color: #fff; }
     .bs4:not(.active) { opacity: 0.45; }
     .busy-status {
       margin-top: 10px; display: flex; align-items: center; gap: 8px;
@@ -296,10 +273,11 @@
         <header>
           <div style="text-align:center; margin-bottom:20px;">
             <img src="https://media.tenor.com/kRbTCxEMfqsAAAAj/deadline-work-hard.gif"
-                 alt="banner" style="width:150px; height:auto ; border-radius:12px;">
+                 alt="banner" style="width:150px; height:auto; border-radius:12px;">
           </div>
         </header>
 
+        <!-- Busy Level -->
         <div class="busy-card" id="busy-card">
           <div class="queue-banner-title">🌡️ ระดับความเดือดของงานช่วงนี้</div>
           <div class="busy-gauge">
@@ -312,11 +290,12 @@
             <div class="busy-dot" id="busy-dot"></div>
             <div>
               <div class="busy-label" id="busy-label">กำลังโหลด...</div>
-              <div class="busy-sub" id="busy-sub"></div>
+              <div class="busy-sub"   id="busy-sub"></div>
             </div>
           </div>
         </div>
 
+        <!-- Queue Info -->
         <div class="queue-banner" id="queue-banner">
           <div class="queue-banner-title">► สถานะคิวปัจจุบัน</div>
           <div class="queue-banner-loading" id="queue-loading">กำลังโหลด...</div>
@@ -335,6 +314,7 @@
               <span>📅</span>
               <span>กำหนดส่งคิวสุดท้าย: <strong id="q-due">—</strong></span>
             </div>
+            <div id="q-slots-wrap"></div>
             <div class="wait-box" id="q-wait-wrap">
               <div class="wait-box-title">⏳ เวลารอโดยประมาณสำหรับการเปิดรับคิวปกติรอบใหม่</div>
               <div class="wait-box-body">
@@ -358,23 +338,21 @@
           </div>
         </div>
 
+        <!-- Search -->
         <div class="field">
           <div class="field-label">กรอกอีเมลของคุณเท่านั้น</div>
           <input type="email" id="searchKey" placeholder="เช่น yourname@email.com เท่านั้น" />
           <span class="radio-desc">หากไม่แน่ใจว่าใช้อีเมลใด สามารถสอบถามนักวาดได้โดยตรง</span>
-          <!-- ✅ แก้ 1: เพิ่ม type="button" กัน form submit -->
           <button type="button" class="btn" id="searchBtn" onclick="searchStatus()">✦ ค้นหาสถานะงาน ✦</button>
           <div style="text-align: center; margin-top: 15px;">
-    <a href="index.html" class="back-home-btn">
-        กลับสู่หน้าหลัก
-    </a>
-</div>
-          <div id="result-zone"></div>
+            <a href="index.html" class="back-home-btn">กลับสู่หน้าหลัก</a>
+          </div>
         </div>
 
       </div>
     </div>
 
+    <!-- Timeline + Result -->
     <div class="timeline-col">
       <div class="side-card">
         <div class="timeline-title">📋 ขั้นตอนการดำเนินงาน</div>
@@ -387,7 +365,7 @@
             </div>
             <div class="step-text">
               <div class="step-label">รอยืนยัน</div>
-              <div class="step-desc">ได้รับรีเควสแล้ว <br> รอการติดต่อจากนักวาด</div>
+              <div class="step-desc">ได้รับรีเควสแล้ว<br>รอการติดต่อจากนักวาด</div>
             </div>
           </div>
 
@@ -437,6 +415,7 @@
         </div>
       </div>
 
+      <!-- ผลลัพธ์การค้นหาแสดงที่นี่ -->
       <div id="result-zone-side" style="display:none;"></div>
     </div>
 
@@ -444,37 +423,23 @@
 
   <script src="script.js"></script>
   <script>
-    const _origSetSlots = window.__patchSlots;
-    const slotsBadge = document.getElementById('q-slots-badge');
-    const slotsEl = document.getElementById('q-slots');
-    if (slotsEl) {
-      const observer = new MutationObserver(() => {
-        const val = parseInt(slotsEl.textContent) || 0;
-        if (slotsBadge) {
-          slotsBadge.className = 'slots-badge ' + (val <= 0 ? 'full' : 'ok');
-          slotsBadge.querySelector('span:first-child').textContent = val <= 0 ? '🔴' : '🟢';
-        }
-      });
-      observer.observe(slotsEl, { childList: true, characterData: true, subtree: true });
-    }
-
     const busyData = {
-      1: { label: 'ปกติ',      sub: 'รับคิวได้ตามปกติค่ะ',               dot: '#1D9E75' },
-      2: { label: 'ยุ่ง',       sub: 'คิวเริ่มเยอะ อาจใช้เวลานานขึ้น',    dot: '#BA7517' },
-      3: { label: 'เดือด',      sub: 'คิวเกือบเต็ม รับได้จำนวนมาก',   dot: '#993C1D' },
-      4: { label: 'เดือดมาก',   sub: 'ปิดรับคิวชั่วคราว โปรดติดตามประกาศ', dot: '#A32D2D' }
+      1: { label: 'ปกติ',     sub: 'รับคิวได้ตามปกติค่ะ',                dot: '#1D9E75' },
+      2: { label: 'ยุ่ง',      sub: 'คิวเริ่มเยอะ อาจใช้เวลานานขึ้น',    dot: '#BA7517' },
+      3: { label: 'เดือด',     sub: 'คิวเกือบเต็ม กำลังพิจารณาปิดรับ',   dot: '#993C1D' },
+      4: { label: 'เดือดมาก',  sub: 'ปิดรับคิวชั่วคราว โปรดติดตามประกาศ', dot: '#A32D2D' }
     };
 
     function renderBusyLevel(level) {
-      const n = parseInt(level) || 1;
-      const d = busyData[n] || busyData[1];
+      var n = parseInt(level) || 1;
+      var d = busyData[n] || busyData[1];
       [1,2,3,4].forEach(function(i) {
-        const el = document.getElementById('bs' + i);
+        var el = document.getElementById('bs' + i);
         if (!el) return;
         el.className = 'busy-seg bs' + i + (i === n ? ' active' : i < n ? ' passed' : '');
       });
-      document.getElementById('busy-label').textContent = d.label;
-      document.getElementById('busy-sub').textContent   = d.sub;
+      document.getElementById('busy-label').textContent    = d.label;
+      document.getElementById('busy-sub').textContent      = d.sub;
       document.getElementById('busy-dot').style.background = d.dot;
     }
 

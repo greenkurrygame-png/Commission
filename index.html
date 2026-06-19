@@ -962,7 +962,46 @@ async function submitForm() {
   btn.classList.add("loading");
   btn.querySelector(".btn-text").textContent = "กำลังตรวจสอบ...";
 
- 
+  // ขั้นที่ 1: ส่ง Google Apps Script (เช็คคิว + บันทึก Sheets)
+  btn.querySelector(".btn-text").textContent = "กำลังตรวจสอบคิว...";
+  try {
+    const sheetRes = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        orderType,
+        offeredPrice: finalPriceToSend,
+        name, contact, email,
+        jobType: jobTypeText,
+        charCount: charCountVal,
+        briefLink, details, publishRule, dueDate
+      })
+    }).then(r => r.json());
+    if (!sheetRes.success) {
+      btn.disabled = false;
+      btn.classList.remove("loading");
+      btn.querySelector(".btn-text").textContent = "✦ ส่งคำขอ ✦";
+      return showError(sheetRes.message || "ไม่สามารถบันทึกข้อมูลได้");
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.classList.remove("loading");
+    btn.querySelector(".btn-text").textContent = "✦ ส่งคำขอ ✦";
+    return showError("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้งนะคะ");
+  }
+  // สำเร็จ
+  btn.disabled = false;
+  btn.classList.remove("loading");
+  btn.querySelector(".btn-text").textContent = "✦ ส่งคำขอ ✦";
+  document.getElementById("form-wrap").querySelectorAll("input, select, textarea").forEach(el => el.value = "");
+  document.querySelectorAll("input[type=checkbox]").forEach(el => el.checked = false);
+  currentCalcPrice = 0;
+  document.getElementById("calculator-zone").style.display = "none";
+  document.getElementById("offer-warning").classList.remove("show");
+  delete document.getElementById("customOfferModal").dataset.shown;
+  const toast = document.getElementById("toast");
+  toast.classList.add("show");
+  toast.scrollIntoView({ behavior: "smooth", block: "center" });
+}
 
 function validateEmail(input) {
   const value = input.value.trim();

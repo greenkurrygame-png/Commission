@@ -748,6 +748,7 @@ function checkFormOpen() {
 function startCountdown() {
   const btn    = document.getElementById("submitBtn");
   const banner = document.getElementById("countdown-banner");
+  let timer;
 
   function tick() {
     const now  = new Date();
@@ -779,7 +780,7 @@ function startCountdown() {
   }
 
   tick();
-  const timer = setInterval(tick, 1000);
+  timer = setInterval(tick, 1000);
 }
 
 let currentCalcPrice = 0;

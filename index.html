@@ -728,11 +728,41 @@ function validateBriefLink(url) {
   catch { return false; }
 }
 
-const OPEN_AT = new Date("2026-06-20T20:00:00");
+// ── เวลาเปิดฟอร์ม: ดึงจากเซิร์ฟเวอร์ (Apps Script) แทนการ hardcode ──
+// ป้องกันกรณีนาฬิกาเครื่องผู้ใช้ไม่ตรง หรือถูกปรับให้เร็ว/ช้ากว่าความจริง
+// หมายเหตุ: แม้เช็คฝั่งนี้ผ่าน การส่งจริงก็ยังถูกเช็คซ้ำที่ฝั่งเซิร์ฟเวอร์ (doPost) อีกชั้นเสมอ
+let OPEN_AT       = null;   // Date object เวลาเปิดฟอร์ม (จากเซิร์ฟเวอร์) หรือ null ถ้ายังไม่รู้/ไม่มีการล็อก
+let CLOCK_OFFSET  = 0;      // serverNow - clientNow (ms) ใช้ชดเชยนาฬิกาเครื่องผู้ใช้ที่เพี้ยน
+let OPEN_TIME_READY = false; // true เมื่อดึงข้อมูลจากเซิร์ฟเวอร์สำเร็จแล้ว (ไม่ว่าจะมี OPEN_AT หรือไม่)
+
+function serverNow() {
+  return new Date(Date.now() + CLOCK_OFFSET);
+}
+
+async function fetchOpenTime() {
+  try {
+    const res = await fetch(SCRIPT_URL + "?action=getOpenTime").then(r => r.json());
+    if (res && res.success) {
+      const serverNowAtFetch = new Date(res.serverNow);
+      CLOCK_OFFSET = serverNowAtFetch.getTime() - Date.now();
+      OPEN_AT = res.openAt ? new Date(res.openAt) : null;
+      OPEN_TIME_READY = true;
+      return true;
+    }
+  } catch (e) {
+    console.error("fetchOpenTime failed:", e);
+  }
+  OPEN_TIME_READY = false;
+  return false;
+}
 
 function checkFormOpen() {
-  const now = new Date();
-  if (now < OPEN_AT) {
+  // ยังไม่เคยดึงเวลาจากเซิร์ฟเวอร์สำเร็จเลย -> เพื่อความปลอดภัย ไม่ปล่อยให้ส่ง
+  if (!OPEN_TIME_READY) {
+    showError("ไม่สามารถตรวจสอบเวลาเปิดรับคำขอได้ กรุณาลองใหม่อีกครั้งนะคะ");
+    return false;
+  }
+  if (OPEN_AT && serverNow() < OPEN_AT) {
     const openStr = OPEN_AT.toLocaleString("th-TH", {
       day: "numeric", month: "long", year: "numeric",
       hour: "2-digit", minute: "2-digit"
@@ -743,13 +773,32 @@ function checkFormOpen() {
   return true;
 }
 
-function startCountdown() {
+async function startCountdown() {
   const btn    = document.getElementById("submitBtn");
   const banner = document.getElementById("countdown-banner");
   let timer;
 
+  // ระหว่างรอดึงเวลาจากเซิร์ฟเวอร์ ปิดปุ่มไว้ก่อนกันพลาด
+  btn.disabled = true;
+  banner.style.display = "block";
+  banner.textContent = "⏳ กำลังตรวจสอบเวลาเปิดรับคำขอ...";
+
+  const ok = await fetchOpenTime();
+
+  if (!ok) {
+    banner.textContent = "⚠️ ไม่สามารถตรวจสอบเวลาเปิดรับคำขอได้ กรุณารีเฟรชหน้านี้อีกครั้งนะคะ";
+    return;
+  }
+
+  if (!OPEN_AT) {
+    // ไม่มีการล็อกเวลาไว้ -> เปิดให้ส่งได้ตามปกติ
+    btn.disabled = false;
+    banner.style.display = "none";
+    return;
+  }
+
   function tick() {
-    const now  = new Date();
+    const now  = serverNow();
     const diff = OPEN_AT - now;
 
     if (diff <= 0) {

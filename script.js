@@ -180,40 +180,57 @@ function searchStatus() {
  
             var html = '';
             res.orders.forEach(function(order) {
-                var currentIdx  = steps.indexOf(order.status);
-                var trackerHtml = '<div class="mini-tracker">';
- 
-                steps.forEach(function(step, i) {
-                    var isDone    = i < currentIdx;
-                    var isCurrent = i === currentIdx;
-                    var dotStyle  = isDone
-                        ? 'background:' + stepColors[step] + '; color:#fff;'
-                        : isCurrent
-                            ? 'background:' + stepColors[step] + '; color:#fff; box-shadow:0 0 0 3px ' + stepColors[step] + '33;'
-                            : 'background:#e5e7eb; color:#aaa;';
-                    var dotIcon   = isDone ? '✓' : (i + 1);
-                    var lineStyle = isDone ? 'background:' + stepColors[step] + ';' : 'background:#e5e7eb;';
- 
-                    trackerHtml += '<div class="mini-step">';
-                    trackerHtml +=   '<div class="mini-dot" style="' + dotStyle + '">' + dotIcon + '</div>';
-                    trackerHtml +=   '<div class="mini-step-label' + (isCurrent ? ' active' : '') + '">' + step + '</div>';
+                var isRejected = (order.status === "ปฏิเสธ");
+
+                var trackerHtml;
+                if (isRejected) {
+                    // ── สถานะปฏิเสธ: แสดง banner แยกแทน step tracker ปกติ ──
+                    // ไม่แสดงเหตุผลให้ลูกค้าเห็น เพียงแจ้งสถานะ + ทางติดต่อกลับ
+                    trackerHtml =
+                        '<div class="rejected-banner">' +
+                            '<div class="rejected-banner-icon">🚫</div>' +
+                            '<div class="rejected-banner-text">' +
+                                '<strong>คำขอนี้ไม่ผ่านการพิจารณา</strong>' +
+                                'ขออภัยด้วยนะคะ หากมีข้อสงสัยหรือต้องการส่งคำขอใหม่ สามารถติดต่อนักวาดได้โดยตรงค่ะ' +
+                            '</div>' +
+                        '</div>';
+                } else {
+                    var currentIdx = steps.indexOf(order.status);
+                    trackerHtml = '<div class="mini-tracker">';
+
+                    steps.forEach(function(step, i) {
+                        var isDone    = i < currentIdx;
+                        var isCurrent = i === currentIdx;
+                        var dotStyle  = isDone
+                            ? 'background:' + stepColors[step] + '; color:#fff;'
+                            : isCurrent
+                                ? 'background:' + stepColors[step] + '; color:#fff; box-shadow:0 0 0 3px ' + stepColors[step] + '33;'
+                                : 'background:#e5e7eb; color:#aaa;';
+                        var dotIcon   = isDone ? '✓' : (i + 1);
+                        var lineStyle = isDone ? 'background:' + stepColors[step] + ';' : 'background:#e5e7eb;';
+
+                        trackerHtml += '<div class="mini-step">';
+                        trackerHtml +=   '<div class="mini-dot" style="' + dotStyle + '">' + dotIcon + '</div>';
+                        trackerHtml +=   '<div class="mini-step-label' + (isCurrent ? ' active' : '') + '">' + step + '</div>';
+                        trackerHtml += '</div>';
+                        if (i < steps.length - 1) {
+                            trackerHtml += '<div class="mini-line" style="' + lineStyle + '"></div>';
+                        }
+                    });
                     trackerHtml += '</div>';
-                    if (i < steps.length - 1) {
-                        trackerHtml += '<div class="mini-line" style="' + lineStyle + '"></div>';
-                    }
-                });
-                trackerHtml += '</div>';
- 
+                }
+
                 html +=
                     '<div class="order-item">' +
                         '<div class="order-title">' + order.jobType.replace(' (', '<br>(') + '</div>' +
                         '<div class="order-date">วันที่สั่งซื้อ: ' + order.date + '</div>' +
                         '<div class="order-date" style="margin-bottom:10px;">ชื่อ: คุณ ' + order.name + '</div>' +
                         trackerHtml +
-                        '<div class="queue-info">' +
-                            '🔶 ลำดับคิว: <strong>' + order.queueNumber + '</strong>' +
-                            '<br>📅 กำหนดเสร็จ: <strong>' + order.dueDate + '</strong>' +
-                        '</div>' +
+                        (isRejected ? '' :
+                            '<div class="queue-info">' +
+                                '🔶 ลำดับคิว: <strong>' + order.queueNumber + '</strong>' +
+                                '<br>📅 กำหนดเสร็จ: <strong>' + order.dueDate + '</strong>' +
+                            '</div>') +
                     '</div>';
             });
             resultSide.innerHTML = html;

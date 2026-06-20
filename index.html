@@ -944,6 +944,29 @@ function updateAddonDescriptions(jobType, charCount) {
   }
 }
 
+// ── fetch พร้อม retry สำหรับ error ชั่วคราว (เช่น 401 จาก Apps Script ตอนคนยิงพร้อมกันจำนวนมาก) ──
+// retry เฉพาะตอนเจอ network error หรือ response ที่ไม่ใช่ JSON ที่ระบบเราสร้างขึ้น (เช่น HTTP 401/429 ดิบจาก Google)
+// ถ้าได้ JSON กลับมาแล้ว (ไม่ว่า success: true/false) ถือว่าเซิร์ฟเวอร์ของเรารันถึงแล้ว จะไม่ retry ซ้ำ
+async function fetchWithRetry(url, options, maxRetries = 3, baseDelayMs = 700, onRetry = null) {
+  let lastErr;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await fetch(url, options);
+      const json = await res.json(); // ถ้า body ไม่ใช่ JSON (เช่นหน้า error 401 ของ Google) จะ throw ตรงนี้
+      return json;
+    } catch (e) {
+      lastErr = e;
+      if (attempt < maxRetries) {
+        if (typeof onRetry === "function") onRetry(attempt + 1);
+        // หน่วงเวลาแบบสุ่มเล็กน้อย (jitter) กันยิงพร้อมกันซ้ำรอบใหม่
+        const delay = baseDelayMs * (attempt + 1) + Math.random() * 400;
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 async function submitForm() {
   if (!checkFormOpen()) return;
 
@@ -1014,7 +1037,7 @@ async function submitForm() {
   // ขั้นที่ 1: ส่ง Google Apps Script (เช็คคิว + บันทึก Sheets)
   btn.querySelector(".btn-text").textContent = "กำลังตรวจสอบคิว...";
   try {
-    const sheetRes = await fetch(SCRIPT_URL, {
+    const sheetRes = await fetchWithRetry(SCRIPT_URL, {
       method: "POST",
       body: JSON.stringify({
         orderType,
@@ -1024,7 +1047,10 @@ async function submitForm() {
         charCount: charCountVal,
         briefLink, details, publishRule, dueDate
       })
-    }).then(r => r.json());
+    }, 3, 700, (attempt) => {
+      // เรียกทุกครั้งที่กำลังจะลองใหม่ เพื่ออัปเดตข้อความให้ผู้ใช้เห็นว่าระบบไม่ได้ค้าง
+      btn.querySelector(".btn-text").textContent = `ระบบหนาแน่น กำลังลองใหม่ (${attempt})...`;
+    });
     if (!sheetRes.success) {
       btn.disabled = false;
       btn.classList.remove("loading");
@@ -1035,7 +1061,7 @@ async function submitForm() {
     btn.disabled = false;
     btn.classList.remove("loading");
     btn.querySelector(".btn-text").textContent = "✦ ส่งคำขอ ✦";
-    return showError("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้งนะคะ");
+    return showError("ระบบหนาแน่นมาก ไม่สามารถส่งคำขอได้ในขณะนี้ กรุณาลองใหม่อีกครั้งในอีกสักครู่นะคะ");
   }
   // สำเร็จ
   btn.disabled = false;
